@@ -48,8 +48,19 @@ function scoreTitle(query: string, title: string): number {
   const needle = normalizeTitle(query);
   const hay = normalizeTitle(title);
   if (hay === needle) return 100;
-  if (hay.startsWith(needle) || needle.startsWith(hay)) return 80;
-  if (hay.includes(needle) || needle.includes(hay)) return 60;
+
+  // Length ratio guards against a short/truncated candidate (e.g. "Demon
+  // Slayer") getting high confidence against a much longer query (e.g.
+  // "Demon Slayer: Infinity Castle") just because one is a prefix of the
+  // other. Without this, truncated search variants match the wrong title.
+  const ratio = Math.min(needle.length, hay.length) / Math.max(needle.length, hay.length);
+
+  if (hay.startsWith(needle) || needle.startsWith(hay)) {
+    return ratio >= 0.6 ? 80 : Math.floor(ratio * 60);
+  }
+  if (hay.includes(needle) || needle.includes(hay)) {
+    return ratio >= 0.6 ? 60 : Math.floor(ratio * 45);
+  }
   let matches = 0;
   for (const ch of needle) if (hay.includes(ch)) matches++;
   return Math.floor((matches / Math.max(needle.length, 1)) * 40);
@@ -109,9 +120,22 @@ export async function findAnimeHeavenId(title: string): Promise<string | null> {
 
   const unique = Array.from(new Map(allResults.map((result) => [result.id, result])).values());
   if (!unique.length) return null;
-  return unique
+
+  const best = unique
     .map((result) => ({ result, score: scoreTitle(title, result.title) }))
-    .sort((a, b) => b.score - a.score)[0].result.id;
+    .sort((a, b) => b.score - a.score)[0];
+
+  // Below this, the "match" is more likely a different anime (or an
+  // unrelated series when the title is a movie/OVA/special) than the real
+  // thing. Treat it as not found rather than returning a wrong embed.
+  // 60 is the score a genuine substring match gets (e.g. query is a clean
+  // prefix/substring of the real listed title, or vice versa) — legit
+  // matches on AnimeHeaven should never score below this. The false
+  // matches from the bug report score ~20-35, well under this bar.
+  const MIN_ACCEPT_SCORE = 60;
+  if (best.score < MIN_ACCEPT_SCORE) return null;
+
+  return best.result.id;
 }
 
 export async function getHeavenEpisodes(animeId: string): Promise<HeavenEpisode[]> {
