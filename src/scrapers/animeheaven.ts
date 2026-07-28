@@ -44,6 +44,14 @@ function normalizeTitle(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+function significantWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+}
+
 function scoreTitle(query: string, title: string): number {
   const needle = normalizeTitle(query);
   const hay = normalizeTitle(title);
@@ -55,10 +63,27 @@ function scoreTitle(query: string, title: string): number {
   // other. Without this, truncated search variants match the wrong title.
   const ratio = Math.min(needle.length, hay.length) / Math.max(needle.length, hay.length);
 
+  // Direction matters too. If the QUERY is the longer string and the
+  // candidate is only a prefix/substring of it, the candidate is likely
+  // the generic franchise/series page missing a distinguishing subtitle
+  // (a movie title like "Infinity Castle", "Heroes Rising", etc.) — i.e.
+  // probably the wrong entry. A ratio check alone doesn't catch this when
+  // the shared franchise name itself is long (e.g. "Demon Slayer: Kimetsu
+  // no Yaiba" is a genuine prefix of the movie's full title with ratio
+  // ~0.6). If the CANDIDATE is the longer string, the extra text is
+  // usually just a season/part suffix tacked onto the full query, which
+  // is safe and shouldn't be penalized.
+  const queryIsLonger = needle.length > hay.length;
+  const missingWords = queryIsLonger
+    ? significantWords(query).length - significantWords(title).length
+    : 0;
+
   if (hay.startsWith(needle) || needle.startsWith(hay)) {
+    if (queryIsLonger && missingWords >= 2) return Math.floor(ratio * 30);
     return ratio >= 0.6 ? 80 : Math.floor(ratio * 60);
   }
   if (hay.includes(needle) || needle.includes(hay)) {
+    if (queryIsLonger && missingWords >= 2) return Math.floor(ratio * 25);
     return ratio >= 0.6 ? 60 : Math.floor(ratio * 45);
   }
   let matches = 0;
