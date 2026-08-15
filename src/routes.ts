@@ -103,7 +103,11 @@ router.get('/info', async (req: Request, res: Response) => {
     if (!alId) return res.status(404).json({ error: 'Anime not found on AniList' });
     const info = await getSiteIds(alId);
     if (!info) return res.status(404).json({ error: 'Could not fetch info' });
-    return res.json(info);
+
+    const anikoto = await fetchEpisodes('anikoto', info);
+    const episodeCount = anikoto.error ? null : anikoto.episodes.length;
+
+    return res.json({ ...info, episodeCount });
   } catch (e) {
     return res.status(500).json({ error: String(e) });
   }
