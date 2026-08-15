@@ -107,7 +107,13 @@ router.get('/info', async (req: Request, res: Response) => {
     const anikoto = await fetchEpisodes('anikoto', info);
     const episodeCount = anikoto.error ? null : anikoto.episodes.length;
 
-    return res.json({ ...info, episodeCount });
+    return res.json({
+      anilistId: info.anilistId,
+      malId: info.malId,
+      title: info.title,
+      episodeCount,
+      siteIds: info.siteIds,
+    });
   } catch (e) {
     return res.status(500).json({ error: String(e) });
   }
