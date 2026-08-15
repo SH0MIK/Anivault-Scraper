@@ -160,6 +160,9 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
 .embed-preview iframe, .embed-preview video { width:100%; height:100%; border:none; display:block; background:#000; }
 .embed-placeholder { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); gap:12px; font-family:var(--mono); font-size:12px; min-height:200px; }
 .embed-placeholder-icon { font-size:40px; opacity:0.2; }
+.embed-sub-bar { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.embed-sub-btn { font-family:var(--mono); font-size:11px; padding:6px 12px; border-radius:6px; border:1px solid var(--border); background:none; color:var(--muted); cursor:pointer; transition:all 0.15s; }
+.embed-sub-btn.active { background:rgba(167,139,250,0.15); border-color:var(--accent3); color:var(--accent3); }
 
 .status-bar { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:12px; font-family:var(--mono); font-size:12px; }
 .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -705,6 +708,7 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
                 <span>Embed preview will appear here after fetch</span>
               </div>
             </div>
+            <div class="embed-sub-bar" id="embedSubBar"></div>
           </div>
         </div>
 
@@ -974,28 +978,76 @@ function primaryEmbedUrl(data) {
   return data.streamUrl || data.mp4ProxyUrl || data.mp4 || data.embedUrl || data.servers?.[0]?.url || data.servers?.[0]?.sourceId || '';
 }
 
+function renderSubtitleBar(video, subtitles) {
+  const bar = document.getElementById('embedSubBar');
+  bar.innerHTML = '';
+  const subs = Array.isArray(subtitles) ? subtitles.filter(s => s && s.url) : [];
+  if (!subs.length) return;
+
+  subs.forEach((sub, i) => {
+    const track = document.createElement('track');
+    track.kind = 'subtitles';
+    track.label = sub.lang || `Track ${i + 1}`;
+    track.srclang = (sub.lang || 'en').slice(0, 2).toLowerCase();
+    track.src = sub.url;
+    video.appendChild(track);
+  });
+
+  const setActive = (activeBtn) => {
+    bar.querySelectorAll('.embed-sub-btn').forEach(b => b.classList.toggle('active', b === activeBtn));
+  };
+
+  const offBtn = document.createElement('button');
+  offBtn.className = 'embed-sub-btn';
+  offBtn.textContent = 'Off';
+  offBtn.onclick = () => {
+    [...video.textTracks].forEach(t => t.mode = 'disabled');
+    setActive(offBtn);
+  };
+  bar.appendChild(offBtn);
+
+  const hasDefault = subs.some(s => s.default);
+  subs.forEach((sub, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'embed-sub-btn';
+    btn.textContent = sub.lang || `Track ${i + 1}`;
+    btn.onclick = () => {
+      [...video.textTracks].forEach((t, idx) => t.mode = idx === i ? 'showing' : 'disabled');
+      setActive(btn);
+    };
+    bar.appendChild(btn);
+    if (sub.default) setTimeout(() => { video.textTracks[i].mode = 'showing'; setActive(btn); }, 0);
+  });
+  if (!hasDefault) setActive(offBtn);
+}
+
 function renderEmbedPreview(data) {
   const ep = document.getElementById('embedPreview');
+  const subBar = document.getElementById('embedSubBar');
+  subBar.innerHTML = '';
   const embedUrl = primaryEmbedUrl(data);
   const hlsUrl = data.hlsProxyUrl || data.m3u8 || (embedUrl && embedUrl.includes('.m3u8') ? embedUrl : '');
 
   if (hlsUrl) {
-    ep.innerHTML = `<video id="hlsPreview" controls playsinline></video>`;
+    ep.innerHTML = `<video id="hlsPreview" controls playsinline crossorigin="anonymous"></video>`;
     const video = document.getElementById('hlsPreview');
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = hlsUrl;
-    } else if (window.Hls && Hls.isSupported()) {
+    if (window.Hls && Hls.isSupported()) {
       const hls = new Hls();
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hlsUrl;
     } else {
       ep.innerHTML = '<div class="embed-placeholder"><div class="embed-placeholder-icon">!</div><span>HLS playback is not supported in this browser</span></div>';
+      return;
     }
+    renderSubtitleBar(video, data.subtitles);
     return;
   }
 
   if (data.mp4 || data.playbackMode === 'mp4') {
-    ep.innerHTML = `<video controls playsinline src="${escapeAttr(embedUrl)}"></video>`;
+    ep.innerHTML = `<video controls playsinline crossorigin="anonymous" src="${escapeAttr(embedUrl)}"></video>`;
+    renderSubtitleBar(document.querySelector('#embedPreview video'), data.subtitles);
     return;
   }
 
