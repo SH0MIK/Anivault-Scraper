@@ -635,7 +635,41 @@ router.get('/debug/miruro', async (req: Request, res: Response) => {
 });
 
 router.get('/health', (_req, res) => {
-  res.json({ status: 'ok', version: '1.1.0-anikoto', sources: SOURCES, uptime: Math.floor(process.uptime()), cache: cacheStats(), timestamp: new Date().toISOString() });
+  // Unified with anivault.co's /healthz shape ({ status, checks, external })
+  // so status.anivault.co can render both services the same way.
+  //
+  // Note: `sources` below is a static list of configured scraper backends,
+  // not a live reachability check against senshi/animeheaven/miruro/anikoto
+  // themselves — probing those would mean firing real scrape requests on
+  // every health check, which risks tripping their own rate limits/WAFs.
+  // Worth adding later as opt-in, lower-frequency probes if that's wanted.
+  const stats = cacheStats();
+  const process_: { ok: boolean; label: string; detail: string; badges: { label: string; value: string }[]; critical: boolean } = {
+    ok: true,
+    label: 'Scraper Process',
+    detail: 'API process is running and serving requests.',
+    badges: [{ label: 'Uptime', value: `${Math.floor(process.uptime() / 60)}m` }],
+    critical: true,
+  };
+  const cache: { ok: boolean; label: string; detail: string; badges: { label: string; value: string }[]; critical: boolean } = {
+    ok: true,
+    label: 'Response Cache',
+    detail: 'In-memory cache is active.',
+    badges: [
+      { label: 'Keys', value: String(stats.keys ?? 0) },
+      { label: 'Hits', value: String(stats.hits ?? 0) },
+      { label: 'Misses', value: String(stats.misses ?? 0) },
+    ],
+    critical: false,
+  };
+
+  res.json({
+    status: 'ok',
+    checks: { process: process_, cache },
+    external: {},
+    meta: { version: '1.1.0-anikoto', sources: SOURCES },
+    timestamp: new Date().toISOString(),
+  });
 });
 
 export default router;
