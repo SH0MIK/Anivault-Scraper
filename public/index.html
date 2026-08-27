@@ -108,6 +108,35 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
 
 /* ── TESTER ── */
 .tester-wrap { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+
+.tester-mode-switch { display:flex; gap:8px; margin-bottom:20px; }
+.tester-mode-btn { background:var(--surface); border:1px solid var(--border); color:var(--muted); padding:11px 20px; border-radius:10px; font-family:var(--sans); font-weight:700; font-size:13px; cursor:pointer; transition:all 0.15s; }
+.tester-mode-btn:hover { border-color:var(--accent2); color:var(--text); }
+.tester-mode-btn.active { background:var(--accent2); border-color:var(--accent2); color:#000; }
+.tester-panel { display:none; }
+.tester-panel.active { display:block; }
+
+.generic-tester-layout { display:grid; grid-template-columns:280px 1fr; gap:24px; align-items:start; min-width:0; }
+.generic-tester-layout > * { min-width:0; }
+@media (max-width:820px) { .generic-tester-layout { grid-template-columns:1fr; } }
+.generic-endpoint-list { max-height:640px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; padding:12px; background:var(--bg); }
+.gen-category-label { font-family:var(--mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); margin:14px 0 6px; padding:0 4px; }
+.gen-category-label:first-child { margin-top:0; }
+.gen-endpoint-item { display:block; width:100%; text-align:left; background:none; border:none; color:var(--muted); font-family:var(--mono); font-size:11.5px; padding:7px 10px; border-radius:7px; cursor:pointer; transition:all 0.12s; margin-bottom:2px; overflow-wrap:anywhere; }
+.gen-endpoint-item:hover { background:var(--surface2); color:var(--text); }
+.gen-endpoint-item.active { background:var(--accent2); color:#000; font-weight:700; }
+.gen-endpoint-item .gem-badge { display:inline-block; font-size:9px; font-weight:700; padding:1px 5px; border-radius:4px; margin-right:6px; background:var(--surface2); color:var(--accent2); }
+.gen-endpoint-item.active .gem-badge { background:rgba(0,0,0,0.2); color:#000; }
+.generic-form-area { min-height:200px; }
+.gen-field-row { margin-bottom:14px; }
+.gen-field-row .field-label { display:flex; align-items:center; gap:6px; }
+.gen-field-badge { font-family:var(--mono); font-size:9px; padding:1px 6px; border-radius:4px; font-weight:700; }
+.gen-field-badge.req { background:rgba(255,80,80,0.15); color:#ff6b6b; }
+.gen-field-badge.opt { background:rgba(255,255,255,0.06); color:var(--muted); }
+.gen-smart-preview { margin-bottom:16px; }
+.gen-smart-preview img { max-width:220px; border-radius:8px; border:1px solid var(--border); display:block; }
+.gen-smart-preview iframe { width:100%; aspect-ratio:16/9; border-radius:8px; border:1px solid var(--border); }
+
 .tester-top { display:flex; align-items:center; gap:8px; padding:16px 20px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.3); }
 .tester-dot { width:10px; height:10px; border-radius:50%; }
 .tester-body { padding:32px; }
@@ -243,13 +272,42 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
     <button class="nav-item" onclick="navScrollTo('structure',this)"><span class="nav-dot"></span>URL Structure</button>
   </div>
   <div class="nav-section">
-    <div class="nav-section-label">Endpoints</div>
+    <div class="nav-section-label">Streaming</div>
     <button class="nav-item" onclick="navScrollTo('ep-search',this)"><span class="nav-dot"></span>Search <span class="method-badge">GET</span></button>
     <button class="nav-item" onclick="navScrollTo('ep-info',this)"><span class="nav-dot"></span>Info <span class="method-badge">GET</span></button>
     <button class="nav-item" onclick="navScrollTo('ep-episodes',this)"><span class="nav-dot"></span>Episodes <span class="method-badge">GET</span></button>
     <button class="nav-item" onclick="navScrollTo('ep-servers',this)"><span class="nav-dot"></span>Servers <span class="method-badge">GET</span></button>
     <button class="nav-item" onclick="navScrollTo('ep-watch',this)"><span class="nav-dot"></span>Watch <span class="method-badge">GET</span></button>
     <button class="nav-item" onclick="navScrollTo('ep-health',this)"><span class="nav-dot"></span>Health <span class="method-badge">GET</span></button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">MAL Scraper</div>
+    <button class="nav-item" onclick="navScrollTo('mal-anime',this)"><span class="nav-dot"></span>Anime Details</button>
+    <button class="nav-item" onclick="navScrollTo('mal-episodes',this)"><span class="nav-dot"></span>Episode List</button>
+    <button class="nav-item" onclick="navScrollTo('mal-episode-single',this)"><span class="nav-dot"></span>Single Episode</button>
+    <button class="nav-item" onclick="navScrollTo('mal-characters',this)"><span class="nav-dot"></span>Anime Characters</button>
+    <button class="nav-item" onclick="navScrollTo('mal-character',this)"><span class="nav-dot"></span>Character Detail</button>
+    <button class="nav-item" onclick="navScrollTo('mal-anime-pics',this)"><span class="nav-dot"></span>Anime Pictures</button>
+    <button class="nav-item" onclick="navScrollTo('mal-char-pics',this)"><span class="nav-dot"></span>Character Pictures</button>
+    <button class="nav-item" onclick="navScrollTo('mal-themes',this)"><span class="nav-dot"></span>Theme Songs</button>
+    <button class="nav-item" onclick="navScrollTo('mal-videos',this)"><span class="nav-dot"></span>Trailers/MVs</button>
+    <button class="nav-item" onclick="navScrollTo('mal-recs',this)"><span class="nav-dot"></span>Recommendations</button>
+    <button class="nav-item" onclick="navScrollTo('mal-external',this)"><span class="nav-dot"></span>External Links</button>
+    <button class="nav-item" onclick="navScrollTo('mal-streaming',this)"><span class="nav-dot"></span>Streaming Platforms</button>
+    <button class="nav-item" onclick="navScrollTo('mal-search',this)"><span class="nav-dot"></span>MAL Search</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">AniList / TMDB / Kitsu</div>
+    <button class="nav-item" onclick="navScrollTo('al-season',this)"><span class="nav-dot"></span>Season Now</button>
+    <button class="nav-item" onclick="navScrollTo('al-banners',this)"><span class="nav-dot"></span>Top Banners</button>
+    <button class="nav-item" onclick="navScrollTo('al-id',this)"><span class="nav-dot"></span>MAL → AniList ID</button>
+    <button class="nav-item" onclick="navScrollTo('al-episodes',this)"><span class="nav-dot"></span>Streaming Episodes</button>
+    <button class="nav-item" onclick="navScrollTo('art-endpoints',this)"><span class="nav-dot"></span>Art (AniList/TMDB/Kitsu)</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Combined</div>
+    <button class="nav-item" onclick="navScrollTo('combo-anime',this)"><span class="nav-dot"></span>Anime + Art</button>
+    <button class="nav-item" onclick="navScrollTo('combo-episode',this)"><span class="nav-dot"></span>Episode + Thumbnail</button>
   </div>
   <div class="nav-section">
     <div class="nav-section-label">Tools</div>
@@ -268,10 +326,10 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
     <p class="hero-desc">A unified REST API to fetch anime stream URLs and embed links across multiple sources, addressed by MAL or AniList ID. Railway-ready, zero config.</p>
     <div class="hero-pills">
       <span class="pill live">Online</span>
-      <span class="pill">4 Sources</span>
-      <span class="pill">MAL + AniList IDs</span>
+      <span class="pill">2 Streaming Sources</span>
+      <span class="pill">MAL Scraper</span>
+      <span class="pill">TMDB · Kitsu · AniList</span>
       <span class="pill">Sub · Dub · Raw</span>
-      <span class="pill">Server Selection</span>
     </div>
   </section>
 
@@ -282,18 +340,6 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
     <div class="sources-grid">
       <div class="source-info-card">
         <div class="sic-header">
-          <div class="sic-icon">🌊</div>
-          <div><div class="sic-name">Senshi</div><div class="sic-url">senshi.live</div></div>
-          <span class="sic-tag verify">Verify selectors</span>
-        </div>
-        <div class="sic-row"><span class="sic-row-label">Key</span><span class="sic-row-val">senshi</span></div>
-        <div class="sic-row"><span class="sic-row-label">ID format</span><span class="sic-row-val">Zoro-style slug</span></div>
-        <div class="sic-row"><span class="sic-row-label">Embeds</span><span class="sic-row-val">Megacloud, Vidstreaming</span></div>
-        <div class="sic-row"><span class="sic-row-label">Audio</span><span class="sic-row-val">Sub, Dub, Raw</span></div>
-      </div>
-
-      <div class="source-info-card">
-        <div class="sic-header">
           <div class="sic-icon">🎭</div>
           <div><div class="sic-name">AnimeHeaven</div><div class="sic-url">animeheaven.me</div></div>
           <span class="sic-tag works">Direct MP4</span>
@@ -302,17 +348,6 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
         <div class="sic-row"><span class="sic-row-label">ID format</span><span class="sic-row-val">AnimeHeaven show ID</span></div>
         <div class="sic-row"><span class="sic-row-label">Streams</span><span class="sic-row-val">Direct MP4</span></div>
         <div class="sic-row"><span class="sic-row-label">Audio</span><span class="sic-row-val">Sub only</span></div>
-      </div>
-      <div class="source-info-card">
-        <div class="sic-header">
-          <div class="sic-icon">🪐</div>
-          <div><div class="sic-name">Miruro</div><div class="sic-url">miruro.tv</div></div>
-          <span class="sic-tag works">Direct M3U8</span>
-        </div>
-        <div class="sic-row"><span class="sic-row-label">Key</span><span class="sic-row-val">miruro</span></div>
-        <div class="sic-row"><span class="sic-row-label">ID format</span><span class="sic-row-val">AniList ID (direct)</span></div>
-        <div class="sic-row"><span class="sic-row-label">Servers</span><span class="sic-row-val">kiwi, bonk, bee, bun, twin, ally, moo, cog, pewe, nun, telli, hop</span></div>
-        <div class="sic-row"><span class="sic-row-label">Audio</span><span class="sic-row-val">Sub, Dub (per provider)</span></div>
       </div>
 
       <div class="source-info-card">
@@ -338,17 +373,14 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
       <pre><span class="cmt"># /api/watch/{source}/{id}/{ep}/{type}?server=Name</span>
 <span class="cmt"># id = AniList ID  OR  mal-{malId}</span>
 
-GET /api/watch/<span class="str">senshi</span>/<span class="num">20</span>/<span class="num">1</span>/<span class="str">sub</span>
-GET /api/watch/<span class="str">dao</span>/mal-<span class="num">21</span>/<span class="num">5</span>/<span class="str">dub</span>
-GET /api/watch/<span class="str">wave</span>/<span class="num">1535</span>/<span class="num">12</span>/<span class="str">sub</span>?server=Vidstreaming
-GET /api/watch/<span class="str">animeheaven</span>/<span class="str">{heavenId}</span>/<span class="num">3</span>/<span class="str">sub</span>
-GET /api/watch/<span class="str">miruro</span>/<span class="num">20</span>/<span class="num">1</span>/<span class="str">sub</span>?server=bonk-sub
-GET /api/watch/<span class="str">anikoto</span>/<span class="num">20</span>/<span class="num">1</span>/<span class="str">sub</span></pre>
+GET /api/watch/<span class="str">anikoto</span>/<span class="num">20</span>/<span class="num">1</span>/<span class="str">sub</span>
+GET /api/watch/<span class="str">anikoto</span>/mal-<span class="num">21</span>/<span class="num">5</span>/<span class="str">dub</span>?server=Megacloud
+GET /api/watch/<span class="str">animeheaven</span>/<span class="str">{heavenId}</span>/<span class="num">3</span>/<span class="str">sub</span></pre>
     </div>
     <div class="code-block">
       <div class="code-header">Query-based (compat) <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
-      <pre>GET /api/watch?source=<span class="str">senshi</span>&anilistId=<span class="num">20</span>&ep=<span class="num">1</span>&type=<span class="str">sub</span>
-GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</span>&ep=<span class="num">5</span>&type=<span class="str">dub</span>&server=Megacloud</pre>
+      <pre>GET /api/watch?source=<span class="str">anikoto</span>&anilistId=<span class="num">20</span>&ep=<span class="num">1</span>&type=<span class="str">sub</span>
+GET /api/watch?source=<span class="str">animeheaven</span>&heavenId=<span class="str">ukr6y</span>&ep=<span class="num">5</span>&type=<span class="str">sub</span></pre>
     </div>
   </section>
 
@@ -414,7 +446,7 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
   <span class="key">"malId"</span>: <span class="num">20</span>,
   <span class="key">"title"</span>: <span class="str">"Naruto"</span>,
   <span class="key">"siteIds"</span>: {
-    <span class="key">"zoro"</span>: <span class="str">"naruto-225"</span>,       <span class="cmt">// used by senshi, dao, wave</span>
+    <span class="key">"zoro"</span>: <span class="str">"naruto-225"</span>,       <span class="cmt">// zoro-style slug, kept for compat</span>
     <span class="key">"gogoanime"</span>: <span class="str">"naruto"</span>,
     <span class="key">"animeheaven"</span>: <span class="str">"ukr6y"</span>,
     <span class="key">"anikoto"</span>: <span class="str">"naruto-3"</span>
@@ -437,13 +469,13 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
           <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
           <tbody>
             <tr><td class="param-name">anilistId / malId</td><td class="param-type">number</td><td><span class="req-badge">one required</span></td><td>Anime identifier</td></tr>
-            <tr><td class="param-name">source</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td>senshi · dao · wave · animeheaven · miruro · anikoto (default: senshi)</td></tr>
+            <tr><td class="param-name">source</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td>animeheaven · anikoto</td></tr>
           </tbody>
         </table>
         <div class="code-block">
           <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
           <pre>{
-  <span class="key">"anilistId"</span>: <span class="num">20</span>, <span class="key">"source"</span>: <span class="str">"senshi"</span>, <span class="key">"count"</span>: <span class="num">220</span>,
+  <span class="key">"anilistId"</span>: <span class="num">20</span>, <span class="key">"source"</span>: <span class="str">"anikoto"</span>, <span class="key">"count"</span>: <span class="num">220</span>,
   <span class="key">"episodes"</span>: [
     { <span class="key">"num"</span>: <span class="num">1</span>, <span class="key">"id"</span>: <span class="str">"ep-id-001"</span>, <span class="key">"title"</span>: <span class="str">"Enter! Naruto Uzumaki!"</span> }
   ]
@@ -467,13 +499,13 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
             <tr><td class="param-name">anilistId / malId</td><td class="param-type">number</td><td><span class="req-badge">one required</span></td><td>Anime identifier</td></tr>
             <tr><td class="param-name">ep</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>Episode number</td></tr>
             <tr><td class="param-name">type</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td>sub · dub · raw · all (default: sub)</td></tr>
-            <tr><td class="param-name">source</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td>senshi · dao · wave · miruro · anikoto (default: senshi)</td></tr>
+            <tr><td class="param-name">source</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td>animeheaven · anikoto</td></tr>
           </tbody>
         </table>
         <div class="code-block">
           <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
           <pre>{
-  <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"type"</span>: <span class="str">"sub"</span>, <span class="key">"source"</span>: <span class="str">"senshi"</span>,
+  <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"type"</span>: <span class="str">"sub"</span>, <span class="key">"source"</span>: <span class="str">"anikoto"</span>,
   <span class="key">"servers"</span>: [
     { <span class="key">"name"</span>: <span class="str">"Megacloud"</span>,    <span class="key">"sourceId"</span>: <span class="str">"abc123"</span>, <span class="key">"type"</span>: <span class="str">"sub"</span> },
     { <span class="key">"name"</span>: <span class="str">"Vidstreaming"</span>, <span class="key">"sourceId"</span>: <span class="str">"def456"</span>, <span class="key">"type"</span>: <span class="str">"sub"</span> }
@@ -495,7 +527,7 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
         <table class="params-table">
           <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td class="param-name">source</td><td class="param-type">string</td><td>path</td><td>senshi · dao · wave · animeheaven · miruro · anikoto</td></tr>
+            <tr><td class="param-name">source</td><td class="param-type">string</td><td>path</td><td>animeheaven · anikoto</td></tr>
             <tr><td class="param-name">id</td><td class="param-type">string</td><td>path</td><td>AniList ID or "mal-{malId}"</td></tr>
             <tr><td class="param-name">ep</td><td class="param-type">number</td><td>path</td><td>Episode number</td></tr>
             <tr><td class="param-name">type</td><td class="param-type">string</td><td>path</td><td>sub · dub · raw</td></tr>
@@ -506,7 +538,7 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
           <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
           <pre>{
   <span class="key">"anilistId"</span>: <span class="num">20</span>, <span class="key">"malId"</span>: <span class="num">20</span>, <span class="key">"title"</span>: <span class="str">"Naruto"</span>,
-  <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"type"</span>: <span class="str">"sub"</span>, <span class="key">"source"</span>: <span class="str">"senshi"</span>,
+  <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"type"</span>: <span class="str">"sub"</span>, <span class="key">"source"</span>: <span class="str">"anikoto"</span>,
   <span class="key">"server"</span>: <span class="str">"Megacloud"</span>,
   <span class="key">"availableServers"</span>: [<span class="str">"Megacloud"</span>, <span class="str">"Vidstreaming"</span>],
   <span class="key">"embedUrl"</span>: <span class="str">"https://megacloud.blog/embed-2/e-1/AbCdEf"</span>,
@@ -529,13 +561,36 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
         <span class="ep-chevron">▼</span>
       </div>
       <div class="endpoint-body">
+        <div class="section-sub" style="margin-bottom:12px">Unified with anivault.co's <code>/healthz</code> shape so status.anivault.co can render both services the same way. <code>meta.sources</code> is a static list of configured scraper backends, not a live reachability probe of each source.</div>
         <div class="code-block">
           <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
           <pre>{
   <span class="key">"status"</span>: <span class="str">"ok"</span>,
-  <span class="key">"version"</span>: <span class="str">"1.0.0"</span>,
-  <span class="key">"sources"</span>: [<span class="str">"senshi"</span>, <span class="str">"animeheaven"</span>, <span class="str">"miruro"</span>, <span class="str">"anikoto"</span>],
-  <span class="key">"uptime"</span>: <span class="num">3600</span>,
+  <span class="key">"checks"</span>: {
+    <span class="key">"process"</span>: {
+      <span class="key">"ok"</span>: <span class="num">true</span>,
+      <span class="key">"label"</span>: <span class="str">"Scraper Process"</span>,
+      <span class="key">"detail"</span>: <span class="str">"API process is running and serving requests."</span>,
+      <span class="key">"badges"</span>: [{ <span class="key">"label"</span>: <span class="str">"Uptime"</span>, <span class="key">"value"</span>: <span class="str">"60m"</span> }],
+      <span class="key">"critical"</span>: <span class="num">true</span>
+    },
+    <span class="key">"cache"</span>: {
+      <span class="key">"ok"</span>: <span class="num">true</span>,
+      <span class="key">"label"</span>: <span class="str">"Response Cache"</span>,
+      <span class="key">"detail"</span>: <span class="str">"In-memory cache is active."</span>,
+      <span class="key">"badges"</span>: [
+        { <span class="key">"label"</span>: <span class="str">"Keys"</span>, <span class="key">"value"</span>: <span class="str">"12"</span> },
+        { <span class="key">"label"</span>: <span class="str">"Hits"</span>, <span class="key">"value"</span>: <span class="str">"340"</span> },
+        { <span class="key">"label"</span>: <span class="str">"Misses"</span>, <span class="key">"value"</span>: <span class="str">"22"</span> }
+      ],
+      <span class="key">"critical"</span>: <span class="num">false</span>
+    }
+  },
+  <span class="key">"external"</span>: {},
+  <span class="key">"meta"</span>: {
+    <span class="key">"version"</span>: <span class="str">"1.1.0-anikoto"</span>,
+    <span class="key">"sources"</span>: [<span class="str">"animeheaven"</span>, <span class="str">"anikoto"</span>]
+  },
   <span class="key">"timestamp"</span>: <span class="str">"2026-06-04T12:00:00.000Z"</span>
 }</pre>
         </div>
@@ -544,11 +599,525 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
 
   </section>
 
-  <!-- ═══════════════════════════════════════ TESTER ═══════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════ MAL SCRAPER ═══════════════════════════════════════ -->
+  <section class="section" id="mal-anime">
+    <div class="section-title">MAL Scraper</div>
+    <div class="section-sub">Direct MyAnimeList scraper — replaces Jikan for everything below. Cached, rate-limited to one request in flight at a time.</div>
+
+    <div class="endpoint-card" id="card-mal-anime">
+      <div class="endpoint-header" onclick="toggleCard('mal-anime')">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span></span>
+        <span class="ep-desc">Full anime details</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"Shingeki no Kyojin"</span>,
+  <span class="key">"titleEnglish"</span>: <span class="str">"Attack on Titan"</span>, <span class="key">"titleJapanese"</span>: <span class="str">"進撃の巨人"</span>,
+  <span class="key">"synopsis"</span>: <span class="str">"..."</span>, <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/images/anime/10/47347.jpg"</span>,
+  <span class="key">"type"</span>: <span class="str">"TV"</span>, <span class="key">"episodes"</span>: <span class="num">25</span>, <span class="key">"status"</span>: <span class="str">"Finished Airing"</span>,
+  <span class="key">"aired"</span>: <span class="str">"Apr 7, 2013 to Sep 29, 2013"</span>, <span class="key">"score"</span>: <span class="num">8.55</span>, <span class="key">"rank"</span>: <span class="num">115</span>,
+  <span class="key">"genres"</span>: [<span class="str">"Action"</span>, <span class="str">"Drama"</span>], <span class="key">"studios"</span>: [<span class="str">"Wit Studio"</span>],
+  <span class="key">"streamingPlatforms"</span>: [{ <span class="key">"name"</span>: <span class="str">"Crunchyroll"</span>, <span class="key">"url"</span>: <span class="str">"https://..."</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-episodes">
+      <div class="endpoint-header" onclick="toggleCard('mal-episodes')" id="mal-episodes">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/episodes</span>
+        <span class="ep-desc">Paginated episode list, 100/page</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">page</td><td class="param-type">number</td><td>query</td><td><span class="opt-badge">optional</span> default 1</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"data"</span>: [
+    { <span class="key">"malId"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"To You, 2000 Years in the Future"</span>, <span class="key">"aired"</span>: <span class="str">"Apr 7, 2013"</span>, <span class="key">"filler"</span>: <span class="kw">false</span>, <span class="key">"recap"</span>: <span class="kw">false</span> }
+  ],
+  <span class="key">"pagination"</span>: { <span class="key">"currentPage"</span>: <span class="num">1</span>, <span class="key">"hasNextPage"</span>: <span class="kw">false</span> }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-episode-single">
+      <div class="endpoint-header" onclick="toggleCard('mal-episode-single')" id="mal-episode-single">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/episodes/<span class="param">{epNum}</span></span>
+        <span class="ep-desc">One episode's title/aired/filler/recap</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">epNum</td><td class="param-type">number</td><td>path</td><td>Episode number</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: { <span class="key">"malId"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"To You, 2000 Years in the Future"</span>, <span class="key">"titleJapanese"</span>: <span class="str">"2000年後の君へ"</span>, <span class="key">"aired"</span>: <span class="str">"Apr 7, 2013"</span>, <span class="key">"filler"</span>: <span class="kw">false</span>, <span class="key">"recap"</span>: <span class="kw">false</span> } }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-characters">
+      <div class="endpoint-header" onclick="toggleCard('mal-characters')" id="mal-characters">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/characters</span>
+        <span class="ep-desc">Cast + voice actors for an anime</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"data"</span>: [{
+    <span class="key">"characterId"</span>: <span class="num">40882</span>, <span class="key">"name"</span>: <span class="str">"Yeager, Eren"</span>, <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/..."</span>,
+    <span class="key">"role"</span>: <span class="str">"Main"</span>,
+    <span class="key">"voiceActors"</span>: [{ <span class="key">"peopleId"</span>: <span class="num">118</span>, <span class="key">"name"</span>: <span class="str">"Kaji, Yuuki"</span>, <span class="key">"language"</span>: <span class="str">"Japanese"</span> }]
+  }]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-character">
+      <div class="endpoint-header" onclick="toggleCard('mal-character')" id="mal-character">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/character/<span class="param">{id}</span></span>
+        <span class="ep-desc">Single character: bio + animeography + voice actors in one scrape</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL character ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"characterId"</span>: <span class="num">45627</span>, <span class="key">"name"</span>: <span class="str">"Levi (リヴァイ)"</span>, <span class="key">"nameKanji"</span>: <span class="str">"リヴァイ"</span>,
+  <span class="key">"about"</span>: <span class="str">"Levi is known as humanity's most powerful soldier..."</span>,
+  <span class="key">"note"</span>: <span class="str">"Levi is the official English translation by Kodansha."</span>,
+  <span class="key">"spoilers"</span>: [<span class="str">"It is later revealed that his full name is Levi Ackerman."</span>],
+  <span class="key">"favorites"</span>: <span class="num">146754</span>, <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/..."</span>,
+  <span class="key">"animeography"</span>: [{ <span class="key">"animeId"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"Shingeki no Kyojin"</span>, <span class="key">"role"</span>: <span class="str">"Supporting"</span> }],
+  <span class="key">"voiceActors"</span>: [{ <span class="key">"peopleId"</span>: <span class="num">118</span>, <span class="key">"name"</span>: <span class="str">"Kamiya, Hiroshi"</span>, <span class="key">"language"</span>: <span class="str">"Japanese"</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-anime-pics">
+      <div class="endpoint-header" onclick="toggleCard('mal-anime-pics')" id="mal-anime-pics">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/pictures</span>
+        <span class="ep-desc">Anime picture gallery</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/images/anime/.../full.jpg"</span>, <span class="key">"thumbnail"</span>: <span class="str">"https://cdn.myanimelist.net/images/anime/.../small.jpg"</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-char-pics">
+      <div class="endpoint-header" onclick="toggleCard('mal-char-pics')" id="mal-char-pics">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/character/<span class="param">{id}</span>/pictures</span>
+        <span class="ep-desc">Character picture gallery</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL character ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/images/characters/.../full.jpg"</span>, <span class="key">"thumbnail"</span>: <span class="str">"https://cdn.myanimelist.net/images/characters/.../small.jpg"</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-themes">
+      <div class="endpoint-header" onclick="toggleCard('mal-themes')" id="mal-themes">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/themes</span>
+        <span class="ep-desc">Opening/ending theme credits + Spotify links</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"opening"</span>: [{ <span class="key">"number"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"Guren no Yumiya"</span>, <span class="key">"artist"</span>: <span class="str">"Linked Horizon"</span>, <span class="key">"episodes"</span>: <span class="str">"1-13"</span>, <span class="key">"spotifyUrl"</span>: <span class="str">"https://open.spotify.com/track/..."</span> }],
+  <span class="key">"ending"</span>: [{ <span class="key">"number"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"Utsukushiki Zankoku na Sekai"</span>, <span class="key">"artist"</span>: <span class="str">"Yoko Hikasa"</span>, <span class="key">"episodes"</span>: <span class="str">"1-13"</span>, <span class="key">"spotifyUrl"</span>: <span class="kw">null</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-videos">
+      <div class="endpoint-header" onclick="toggleCard('mal-videos')" id="mal-videos">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/videos</span>
+        <span class="ep-desc">Trailers (PVs) + official music videos, with YouTube IDs</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"musicVideos"</span>: [{ <span class="key">"label"</span>: <span class="str">"ED 1 (Artist ver.)"</span>, <span class="key">"youtubeId"</span>: <span class="str">"kgZRAyVMcB8"</span>, <span class="key">"embedUrl"</span>: <span class="str">"https://www.youtube-nocookie.com/embed/..."</span>, <span class="key">"songTitle"</span>: <span class="str">"Utsukushiki Zankoku na Sekai"</span>, <span class="key">"songArtist"</span>: <span class="str">"Yoko Hikasa"</span> }],
+  <span class="key">"trailers"</span>: [{ <span class="key">"label"</span>: <span class="str">"PV 1"</span>, <span class="key">"youtubeId"</span>: <span class="str">"KKzmOh4SuBc"</span>, <span class="key">"embedUrl"</span>: <span class="str">"https://www.youtube-nocookie.com/embed/..."</span>, <span class="key">"songTitle"</span>: <span class="kw">null</span>, <span class="key">"songArtist"</span>: <span class="kw">null</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-recs">
+      <div class="endpoint-header" onclick="toggleCard('mal-recs')" id="mal-recs">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/recommendations</span>
+        <span class="ep-desc">Top 12 "you might also like", vote-sorted</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"animeId"</span>: <span class="num">28623</span>, <span class="key">"title"</span>: <span class="str">"Koutetsujou no Kabaneri"</span>, <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/..."</span>, <span class="key">"votes"</span>: <span class="num">109</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-external">
+      <div class="endpoint-header" onclick="toggleCard('mal-external')" id="mal-external">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/external</span>
+        <span class="ep-desc">Official site + streaming/related outbound links</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"name"</span>: <span class="str">"Official Site"</span>, <span class="key">"url"</span>: <span class="str">"https://shingeki.tv/"</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-streaming">
+      <div class="endpoint-header" onclick="toggleCard('mal-streaming')" id="mal-streaming">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/anime/<span class="param">{id}</span>/streaming</span>
+        <span class="ep-desc">Legal streaming platforms (Crunchyroll, Netflix, etc.)</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Where</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">id</td><td class="param-type">number</td><td>path</td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"name"</span>: <span class="str">"Crunchyroll"</span>, <span class="key">"url"</span>: <span class="str">"https://www.crunchyroll.com/..."</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-mal-search">
+      <div class="endpoint-header" onclick="toggleCard('mal-search')" id="mal-search">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/mal/search</span>
+        <span class="ep-desc">MAL text search (Jikan-shaped)</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">q</td><td class="param-type">string</td><td><span class="req-badge">required</span></td><td>Search query</td></tr>
+            <tr><td class="param-name">limit</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>default 8</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: [{ <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"Shingeki no Kyojin"</span>, <span class="key">"image"</span>: <span class="str">"https://cdn.myanimelist.net/..."</span>, <span class="key">"type"</span>: <span class="str">"TV"</span>, <span class="key">"episodes"</span>: <span class="num">25</span>, <span class="key">"score"</span>: <span class="num">8.55</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ ANILIST / TMDB / KITSU ═══════════════════════════════════════ -->
+  <section class="section" id="al-season">
+    <div class="section-title">AniList · TMDB · Kitsu</div>
+    <div class="section-sub">Supplementary metadata and art. All three "anime art" endpoints (<code style="font-family:var(--mono);color:var(--accent2)">/anilist/anime</code>, <code style="font-family:var(--mono);color:var(--accent2)">/tmdb/anime</code>, <code style="font-family:var(--mono);color:var(--accent2)">/kitsu/anime</code>) return the same shape so they're interchangeable as fallbacks.</div>
+
+    <div class="endpoint-card" id="card-al-season">
+      <div class="endpoint-header" onclick="toggleCard('al-season')">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/anilist/season</span>
+        <span class="ep-desc">Current airing season from AniList</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>Return just this one show's entry from the season</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"season"</span>: <span class="str">"SUMMER"</span>, <span class="key">"seasonYear"</span>: <span class="num">2026</span>, <span class="key">"media"</span>: [{ <span class="key">"idMal"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"..."</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-al-banners">
+      <div class="endpoint-header" onclick="toggleCard('al-banners')" id="al-banners">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/anilist/top-banners</span>
+        <span class="ep-desc">Banner images for top-rated anime, keyed by MAL ID</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">limit</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>default 200</td></tr>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>Return just this one entry</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: { <span class="str">"16498"</span>: <span class="str">"https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498.jpg"</span> } }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-al-id">
+      <div class="endpoint-header" onclick="toggleCard('al-id')" id="al-id">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/anilist/id</span>
+        <span class="ep-desc">MAL ID → AniList ID</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody><tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>MAL anime ID</td></tr></tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"anilistId"</span>: <span class="num">16498</span> }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-al-episodes">
+      <div class="endpoint-header" onclick="toggleCard('al-episodes')" id="al-episodes">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/anilist/episodes</span>
+        <span class="ep-desc">AniList's streamingEpisodes list (titles + thumbnails, last-resort fallback)</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">ep</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>Return just this one episode</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"episodes"</span>: [{ <span class="key">"title"</span>: <span class="str">"Episode 1 - To You, in 2000 Years"</span>, <span class="key">"thumbnail"</span>: <span class="str">"https://s4.anilist.co/..."</span> }] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-art-endpoints">
+      <div class="endpoint-header" onclick="toggleCard('art-endpoints')" id="art-endpoints">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/{anilist|tmdb|kitsu}/anime</span>
+        <span class="ep-desc">Poster + cover art (+ logo on TMDB) — same shape across all 3</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="opt-badge">one of</span></td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">title</td><td class="param-type">string</td><td><span class="opt-badge">one of</span></td><td>Direct title search, skips MAL lookup (TMDB/Kitsu only)</td></tr>
+            <tr><td class="param-name">list</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td><code>1</code> to skip cache (fresh lookup)</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example: /api/tmdb/anime?malId=16498 <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: { <span class="key">"poster"</span>: <span class="str">"https://image.tmdb.org/t/p/original/..."</span>, <span class="key">"cover"</span>: <span class="str">"https://image.tmdb.org/t/p/original/..."</span>, <span class="key">"logo"</span>: <span class="str">"https://image.tmdb.org/t/p/original/..."</span> }, <span class="key">"log"</span>: [<span class="str">"..."</span>] }</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header">Example: /api/kitsu/anime?malId=16498 <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: { <span class="key">"poster"</span>: <span class="str">"https://media.kitsu.app/anime/poster_images/.../original.jpg"</span>, <span class="key">"cover"</span>: <span class="str">"https://media.kitsu.app/anime/cover_images/.../original.jpg"</span> }, <span class="key">"log"</span>: [<span class="str">"..."</span>] }</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-episode-thumb">
+      <div class="endpoint-header" onclick="toggleCard('episode-thumb')">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/{tmdb|kitsu}/episode-thumb</span>
+        <span class="ep-desc">Single episode still/thumbnail</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">ep</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>Episode number</td></tr>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="opt-badge">one of</span></td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">title</td><td class="param-type">string</td><td><span class="opt-badge">one of</span></td><td>Direct title search</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{ <span class="key">"data"</span>: { <span class="key">"thumbnail"</span>: <span class="str">"https://image.tmdb.org/t/p/original/still.jpg"</span> }, <span class="key">"log"</span>: [<span class="str">"..."</span>] }</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ COMBINED ═══════════════════════════════════════ -->
+  <section class="section" id="combo-anime">
+    <div class="section-title">Combined Endpoints</div>
+    <div class="section-sub">One call instead of chaining several — MAL metadata merged with art/thumbnails from the fallback chain above.</div>
+
+    <div class="endpoint-card" id="card-combo-anime">
+      <div class="endpoint-header" onclick="toggleCard('combo-anime')">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/anime</span>
+        <span class="ep-desc">MAL details + poster/cover/logo, one call</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">list</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td><code>1</code> to skip art cache</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example Response <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"data"</span>: {
+    <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"Shingeki no Kyojin"</span>, <span class="key">"episodes"</span>: <span class="num">25</span>, <span class="key">"score"</span>: <span class="num">8.55</span>,
+    <span class="key">"genres"</span>: [<span class="str">"Action"</span>], <span class="key">"streamingPlatforms"</span>: [{ <span class="key">"name"</span>: <span class="str">"Crunchyroll"</span>, <span class="key">"url"</span>: <span class="str">"..."</span> }],
+    <span class="key">"poster"</span>: <span class="str">"https://image.tmdb.org/..."</span>, <span class="key">"posterSource"</span>: <span class="str">"tmdb"</span>,
+    <span class="key">"cover"</span>: <span class="str">"https://image.tmdb.org/..."</span>, <span class="key">"coverSource"</span>: <span class="str">"tmdb"</span>,
+    <span class="key">"logo"</span>: <span class="str">"https://image.tmdb.org/..."</span>, <span class="key">"logoSource"</span>: <span class="str">"tmdb"</span>
+  },
+  <span class="key">"log"</span>: [<span class="str">"..."</span>]
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint-card" id="card-combo-episode">
+      <div class="endpoint-header" onclick="toggleCard('combo-episode')" id="combo-episode">
+        <span class="ep-method">GET</span>
+        <span class="ep-path">/api/episode</span>
+        <span class="ep-desc">MAL episode metadata + thumbnail (single episode, or the whole show)</span>
+        <span class="ep-chevron">▼</span>
+      </div>
+      <div class="endpoint-body">
+        <table class="params-table">
+          <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td class="param-name">malId</td><td class="param-type">number</td><td><span class="req-badge">required</span></td><td>MAL anime ID</td></tr>
+            <tr><td class="param-name">ep</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>Omit for the whole show's episode list</td></tr>
+            <tr><td class="param-name">concurrency</td><td class="param-type">number</td><td><span class="opt-badge">optional</span></td><td>Whole-show mode only. Default 5, max 10</td></tr>
+            <tr><td class="param-name">list</td><td class="param-type">string</td><td><span class="opt-badge">optional</span></td><td><code>1</code> to skip thumbnail cache</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-header">Example: single episode (?ep=1) <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"data"</span>: {
+    <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"To You, 2000 Years in the Future"</span>,
+    <span class="key">"aired"</span>: <span class="str">"Apr 7, 2013"</span>, <span class="key">"filler"</span>: <span class="kw">false</span>, <span class="key">"recap"</span>: <span class="kw">false</span>,
+    <span class="key">"thumbnail"</span>: <span class="str">"https://media.kitsu.app/..."</span>, <span class="key">"thumbnailSource"</span>: <span class="str">"kitsu"</span>
+  },
+  <span class="key">"log"</span>: [<span class="str">"..."</span>]
+}</pre>
+        </div>
+        <div class="code-block">
+          <div class="code-header">Example: whole show (no ?ep=) <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
+          <pre>{
+  <span class="key">"malId"</span>: <span class="num">16498</span>, <span class="key">"title"</span>: <span class="str">"Attack on Titan"</span>, <span class="key">"count"</span>: <span class="num">25</span>,
+  <span class="key">"episodes"</span>: [{ <span class="key">"episode"</span>: <span class="num">1</span>, <span class="key">"title"</span>: <span class="str">"..."</span>, <span class="key">"thumbnail"</span>: <span class="str">"..."</span>, <span class="key">"thumbnailSource"</span>: <span class="str">"tmdb"</span> }]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
   <section class="section" id="tester">
     <div class="section-title">API Tester</div>
-        <div class="section-sub">Search for an anime, pick your source and server, then fetch live stream data. AnimeHeaven can also use a manual show id.</div>
+    <div class="section-sub">Two ways in: the guided streaming flow (search → source → server → watch), or a raw form for any of the ~35 documented endpoints.</div>
 
+    <div class="tester-mode-switch">
+      <button class="tester-mode-btn active" onclick="setTesterMode('streaming', this)">🎬 Watch &amp; Stream</button>
+      <button class="tester-mode-btn" onclick="setTesterMode('generic', this)">🧰 All Endpoints</button>
+    </div>
+
+    <div id="tester-panel-streaming" class="tester-panel active">
     <div class="tester-wrap">
       <div class="tester-top">
         <div class="tester-dot" style="background:#ff5f57"></div>
@@ -619,27 +1188,16 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
 
         <!-- SOURCE -->
         <label class="field-label">Source</label>
-        <div class="source-grid" style="margin-bottom:20px">
-          <div class="source-card active" onclick="setSource('senshi',this)" id="src-senshi">
-            <div class="source-icon">🌊</div>
-            <span class="source-name">Senshi</span>
-            <span class="source-url">senshi.live</span>
+        <div class="source-grid" style="margin-bottom:20px;grid-template-columns:repeat(2,1fr);">
+          <div class="source-card active" onclick="setSource('anikoto',this)" id="src-anikoto">
+            <div class="source-icon">🦊</div>
+            <span class="source-name">Anikoto</span>
+            <span class="source-url">anikoto.net</span>
           </div>
-
           <div class="source-card" onclick="setSource('animeheaven',this)" id="src-animeheaven">
             <div class="source-icon">🎭</div>
             <span class="source-name">AnimeHeaven</span>
             <span class="source-url">animeheaven.me</span>
-          </div>
-          <div class="source-card" onclick="setSource('miruro',this)" id="src-miruro">
-            <div class="source-icon">🪐</div>
-            <span class="source-name">Miruro</span>
-            <span class="source-url">miruro.tv</span>
-          </div>
-          <div class="source-card" onclick="setSource('anikoto',this)" id="src-anikoto">
-            <div class="source-icon">🦊</div>
-            <span class="source-name">Anikoto</span>
-            <span class="source-url">anikoto.net</span>
           </div>
         </div>
 
@@ -714,6 +1272,70 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
 
       </div>
     </div>
+    </div>
+    <!-- /tester-panel-streaming -->
+
+    <div id="tester-panel-generic" class="tester-panel">
+      <div class="tester-wrap">
+        <div class="tester-top">
+          <div class="tester-dot" style="background:#ff5f57"></div>
+          <div class="tester-dot" style="background:#febc2e"></div>
+          <div class="tester-dot" style="background:#28c840"></div>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px">anivault-api · endpoint tester</span>
+        </div>
+        <div class="tester-body">
+
+          <div class="generic-tester-layout">
+            <div class="generic-endpoint-list">
+              <input class="field-input" id="genFilter" placeholder="Filter endpoints..." oninput="renderEndpointList()" autocomplete="off" style="margin-bottom:12px;" />
+              <div id="genEndpointList"></div>
+            </div>
+
+            <div class="generic-form-area">
+              <div id="genEmptyState" style="color:var(--muted);font-family:var(--mono);font-size:12px;padding:40px 0;text-align:center;">
+                ← Pick an endpoint to build a request
+              </div>
+
+              <div id="genFormWrap" style="display:none;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+                  <span class="ep-method" id="genMethodBadge">GET</span>
+                  <span id="genPathLabel" style="font-family:var(--mono);font-size:13px;color:var(--text);font-weight:600;overflow-wrap:anywhere;"></span>
+                </div>
+                <div id="genDescLabel" style="color:var(--muted);font-size:12px;margin-bottom:18px;"></div>
+
+                <div id="genParamFields"></div>
+
+                <div style="margin:20px 0;">
+                  <label class="field-label">API Base URL</label>
+                  <input class="field-input" id="genBaseUrl" placeholder="https://your-app.up.railway.app (blank = this server)" oninput="updateGenUrlPreview()" />
+                </div>
+
+                <div id="genUrlPreview" style="font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--muted);word-break:break-all;"></div>
+
+                <button class="fetch-btn" id="genFetchBtn" onclick="doGenericFetch()">⚡ Send Request</button>
+
+                <div class="result-area" id="genResultArea">
+                  <div class="divider"></div>
+                  <div class="status-bar" id="genStatusBar" style="display:none;">
+                    <div class="status-dot" id="genStatusDot"></div>
+                    <span class="status-url" id="genStatusUrl"></span>
+                    <span id="genStatusCode"></span>
+                  </div>
+                  <div id="genSmartPreview"></div>
+                  <div class="result-json">
+                    <div class="code-header">Response <button class="copy-btn" onclick="copyGenResult()">Copy</button></div>
+                    <pre id="genJsonOutput"></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- /tester-panel-generic -->
+
   </section>
 
   <!-- ERRORS -->
@@ -743,7 +1365,7 @@ GET /api/watch?source=<span class="str">dao</span>&malId=<span class="num">21</s
 
 <script>
 // ── STATE
-let selType = 'sub', selSource = 'senshi', selServer = '', selEndpoint = 'watch';
+let selType = 'sub', selSource = 'anikoto', selServer = '', selEndpoint = 'watch';
 let selAnime = null, lastResult = null;
 let debounceTimer = null;
 
@@ -841,7 +1463,9 @@ async function loadServers() {
     const base = getBase();
     const serverUrl = selSource === 'animeheaven' && heavenId
       ? `${base}/api/servers?source=animeheaven&heavenId=${encodeURIComponent(heavenId)}&ep=${ep}&type=${selType}`
-      : `${base}/api/servers?anilistId=${selAnime.id}&ep=${ep}&type=${selType}&source=${selSource}`;
+      : selAnime.id
+        ? `${base}/api/servers?anilistId=${selAnime.id}&ep=${ep}&type=${selType}&source=${selSource}`
+        : `${base}/api/servers?malId=${selAnime.malId}&ep=${ep}&type=${selType}&source=${selSource}`;
     const res = await fetch(serverUrl);
     const data = await res.json();
     const servers = data.servers || [];
@@ -947,14 +1571,18 @@ function buildUrl() {
     if (selEndpoint === 'episodes') return `${base}/api/episodes?source=animeheaven&heavenId=${encodeURIComponent(heavenId)}`;
   }
   if (!selAnime) return null;
-  const id = selAnime.id;
+  const id = selAnime.id ? selAnime.id : `mal-${selAnime.malId}`;
   if (selEndpoint === 'watch') {
     let url = `${base}/api/watch/${selSource}/${id}/${ep}/${selType}`;
     if (selServer) url += `?server=${encodeURIComponent(selServer)}`;
     return url;
   }
-  if (selEndpoint === 'servers') return `${base}/api/servers?anilistId=${id}&ep=${ep}&type=${selType}&source=${selSource}`;
-  if (selEndpoint === 'episodes') return `${base}/api/episodes?anilistId=${id}&source=${selSource}`;
+  if (selEndpoint === 'servers') return selAnime.id
+    ? `${base}/api/servers?anilistId=${id}&ep=${ep}&type=${selType}&source=${selSource}`
+    : `${base}/api/servers?malId=${selAnime.malId}&ep=${ep}&type=${selType}&source=${selSource}`;
+  if (selEndpoint === 'episodes') return selAnime.id
+    ? `${base}/api/episodes?anilistId=${id}&source=${selSource}`
+    : `${base}/api/episodes?malId=${selAnime.malId}&source=${selSource}`;
   return null;
 }
 function updateUrlPreview() {
@@ -1161,7 +1789,244 @@ document.addEventListener('click', e => {
   }
 });
 
-// ── BASE URL INPUT triggers URL preview update
+// ══════════════════════════════════════ GENERIC ENDPOINT TESTER ══════════════════════════════════════
+
+function setTesterMode(mode, btn) {
+  document.querySelectorAll('.tester-mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tester-panel-streaming').classList.toggle('active', mode === 'streaming');
+  document.getElementById('tester-panel-generic').classList.toggle('active', mode === 'generic');
+  if (mode === 'generic' && !ENDPOINT_REGISTRY_RENDERED) {
+    renderEndpointList();
+    ENDPOINT_REGISTRY_RENDERED = true;
+  }
+}
+
+// path: {param} placeholders become path inputs. query: array of
+// [name, required, placeholder]. Every entry here was checked against the
+// actual route handler in routes.ts, not guessed from the written docs.
+const ENDPOINT_REGISTRY = [
+  { cat:'Streaming', method:'GET', path:'/api/search', desc:'AniList text search (MAL fallback if AniList is down)', query:[['q',true,'naruto'],['limit',false,'10']] },
+  { cat:'Streaming', method:'GET', path:'/api/info', desc:'Resolve AniList/MAL IDs for a show', query:[['anilistId',false,'20'],['malId',false,'20']] },
+  { cat:'Streaming', method:'GET', path:'/api/episodes', desc:'Streaming-source episode list', query:[['anilistId',false,'20'],['malId',false,'20'],['source',false,'anikoto']] },
+  { cat:'Streaming', method:'GET', path:'/api/servers', desc:'Available servers for one episode', query:[['anilistId',false,'20'],['malId',false,'20'],['ep',true,'1'],['type',false,'sub'],['source',false,'anikoto'],['heavenId',false,'']] },
+  { cat:'Streaming', method:'GET', path:'/api/watch', desc:'Resolve a playable stream', query:[['anilistId',false,'20'],['malId',false,'20'],['heavenId',false,''],['ep',true,'1'],['type',false,'sub'],['source',false,'anikoto'],['server',false,'']] },
+  { cat:'Streaming', method:'GET', path:'/api/health', desc:'Service status + source list', query:[] },
+
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}', desc:'Full anime details', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/episodes', desc:'Paginated episode list', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[['page',false,'1']] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/episodes/{epNum}', desc:'One episode', pathParams:['id','epNum'], pathPlaceholders:{id:'16498',epNum:'1'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/characters', desc:'Cast + voice actors', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/character/{id}', desc:'Single character bio/anime/VA', pathParams:['id'], pathPlaceholders:{id:'45627'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/pictures', desc:'Anime picture gallery', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/character/{id}/pictures', desc:'Character picture gallery', pathParams:['id'], pathPlaceholders:{id:'45627'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/themes', desc:'OP/ED credits + Spotify', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/videos', desc:'Trailers + music videos', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/recommendations', desc:'Top 12 "you might also like"', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/external', desc:'Official site + related links', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/anime/{id}/streaming', desc:'Legal streaming platforms', pathParams:['id'], pathPlaceholders:{id:'16498'}, query:[] },
+  { cat:'MAL Scraper', method:'GET', path:'/api/mal/search', desc:'MAL text search', query:[['q',true,'attack on titan'],['limit',false,'8']] },
+
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/anilist/season', desc:'Current airing season', query:[['malId',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/anilist/top-banners', desc:'Banner images by MAL ID', query:[['limit',false,'200'],['malId',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/anilist/id', desc:'MAL ID → AniList ID', query:[['malId',true,'16498']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/anilist/episodes', desc:'AniList streamingEpisodes list', query:[['malId',true,'16498'],['ep',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/anilist/anime', desc:'Poster + cover art from AniList', query:[['malId',false,'16498'],['list',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/tmdb/anime', desc:'Poster + cover + logo from TMDB', query:[['malId',false,'16498'],['title',false,''],['list',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/tmdb/episode-thumb', desc:'Episode still from TMDB', query:[['ep',true,'1'],['malId',false,'16498'],['title',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/kitsu/anime', desc:'Poster + cover art from Kitsu', query:[['malId',false,'16498'],['title',false,''],['list',false,'']] },
+  { cat:'AniList / TMDB / Kitsu', method:'GET', path:'/api/kitsu/episode-thumb', desc:'Episode still from Kitsu', query:[['ep',true,'1'],['malId',false,'16498'],['title',false,'']] },
+
+  { cat:'Combined', method:'GET', path:'/api/anime', desc:'MAL details + poster/cover/logo', query:[['malId',true,'16498'],['list',false,'']] },
+  { cat:'Combined', method:'GET', path:'/api/episode', desc:'Episode metadata + thumbnail', query:[['malId',true,'16498'],['ep',false,'1'],['concurrency',false,''],['list',false,'']] },
+];
+
+let ENDPOINT_REGISTRY_RENDERED = false;
+let selectedEndpointIdx = null;
+
+function renderEndpointList() {
+  const filter = (document.getElementById('genFilter').value || '').toLowerCase();
+  const listEl = document.getElementById('genEndpointList');
+  listEl.innerHTML = '';
+  let lastCat = null;
+  ENDPOINT_REGISTRY.forEach((ep, i) => {
+    const hay = (ep.path + ' ' + ep.desc + ' ' + ep.cat).toLowerCase();
+    if (filter && !hay.includes(filter)) return;
+    if (ep.cat !== lastCat) {
+      const label = document.createElement('div');
+      label.className = 'gen-category-label';
+      label.textContent = ep.cat;
+      listEl.appendChild(label);
+      lastCat = ep.cat;
+    }
+    const btn = document.createElement('button');
+    btn.className = 'gen-endpoint-item' + (i === selectedEndpointIdx ? ' active' : '');
+    btn.innerHTML = `<span class="gem-badge">${ep.method}</span>${escapeAttr(ep.path)}`;
+    btn.onclick = () => selectEndpoint(i);
+    listEl.appendChild(btn);
+  });
+}
+
+function selectEndpoint(i) {
+  selectedEndpointIdx = i;
+  const ep = ENDPOINT_REGISTRY[i];
+  renderEndpointList();
+
+  document.getElementById('genEmptyState').style.display = 'none';
+  document.getElementById('genFormWrap').style.display = 'block';
+  document.getElementById('genMethodBadge').textContent = ep.method;
+  document.getElementById('genPathLabel').textContent = ep.path;
+  document.getElementById('genDescLabel').textContent = ep.desc;
+
+  const fieldsEl = document.getElementById('genParamFields');
+  fieldsEl.innerHTML = '';
+
+  (ep.pathParams || []).forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'gen-field-row';
+    row.innerHTML = `<label class="field-label">${name} <span class="gen-field-badge req">path · required</span></label>
+      <input class="field-input gen-input" data-kind="path" data-name="${escapeAttr(name)}" placeholder="${escapeAttr((ep.pathPlaceholders||{})[name]||'')}" oninput="updateGenUrlPreview()" />`;
+    fieldsEl.appendChild(row);
+  });
+
+  (ep.query || []).forEach(([name, required, placeholder]) => {
+    const row = document.createElement('div');
+    row.className = 'gen-field-row';
+    row.innerHTML = `<label class="field-label">${name} <span class="gen-field-badge ${required ? 'req' : 'opt'}">${required ? 'required' : 'optional'}</span></label>
+      <input class="field-input gen-input" data-kind="query" data-name="${escapeAttr(name)}" placeholder="${escapeAttr(placeholder||'')}" oninput="updateGenUrlPreview()" />`;
+    fieldsEl.appendChild(row);
+  });
+
+  document.getElementById('genResultArea').style.display = 'none';
+  updateGenUrlPreview();
+}
+
+function buildGenUrl() {
+  const ep = ENDPOINT_REGISTRY[selectedEndpointIdx];
+  if (!ep) return { url: '', missing: [] };
+  const base = (document.getElementById('genBaseUrl').value.trim().replace(/\/$/, '')) || window.location.origin;
+  let path = ep.path;
+  const missing = [];
+
+  (ep.pathParams || []).forEach(name => {
+    const input = document.querySelector(`.gen-input[data-kind="path"][data-name="${name}"]`);
+    const val = input ? input.value.trim() : '';
+    if (!val) missing.push(name);
+    path = path.replace(`{${name}}`, encodeURIComponent(val || `{${name}}`));
+  });
+
+  const qs = [];
+  (ep.query || []).forEach(([name, required]) => {
+    const input = document.querySelector(`.gen-input[data-kind="query"][data-name="${name}"]`);
+    const val = input ? input.value.trim() : '';
+    if (required && !val) missing.push(name);
+    if (val) qs.push(`${encodeURIComponent(name)}=${encodeURIComponent(val)}`);
+  });
+
+  const url = base + path + (qs.length ? '?' + qs.join('&') : '');
+  return { url, missing };
+}
+
+function updateGenUrlPreview() {
+  const { url, missing } = buildGenUrl();
+  const el = document.getElementById('genUrlPreview');
+  el.innerHTML = missing.length
+    ? `<span style="color:var(--warning)">Fill in required: ${missing.join(', ')}</span>`
+    : escapeAttr(url);
+}
+
+async function doGenericFetch() {
+  const { url, missing } = buildGenUrl();
+  if (missing.length) { updateGenUrlPreview(); return; }
+
+  const btn = document.getElementById('genFetchBtn');
+  const resultArea = document.getElementById('genResultArea');
+  const statusBar = document.getElementById('genStatusBar');
+  const statusDot = document.getElementById('genStatusDot');
+  const statusUrl = document.getElementById('genStatusUrl');
+  const statusCode = document.getElementById('genStatusCode');
+  const jsonOut = document.getElementById('genJsonOutput');
+  const preview = document.getElementById('genSmartPreview');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching...';
+  resultArea.style.display = 'block';
+  statusBar.style.display = 'flex';
+  preview.innerHTML = '';
+  statusUrl.textContent = url;
+
+  const t0 = performance.now();
+  try {
+    const res = await fetch(url);
+    const ms = Math.round(performance.now() - t0);
+    const data = await res.json();
+    lastGenResult = data;
+
+    statusDot.style.background = res.ok ? 'var(--success)' : 'var(--accent)';
+    statusCode.innerHTML = `<span style="color:${res.ok ? 'var(--success)' : 'var(--accent)'}">${res.status}</span> · ${ms}ms`;
+    jsonOut.innerHTML = highlight(JSON.stringify(data, null, 2));
+    renderGenSmartPreview(data, preview);
+  } catch (e) {
+    statusDot.style.background = 'var(--accent)';
+    statusCode.textContent = 'Network error';
+    jsonOut.textContent = String(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Send Request';
+  }
+}
+
+// Pulls out anything image/video-shaped from the response, wherever it's
+// nested, so the tester doesn't need per-endpoint render rules -- it just
+// looks for recognizable field names.
+function renderGenSmartPreview(data, container) {
+  container.innerHTML = '';
+  const found = { images: [], embeds: [] };
+  const seen = new Set();
+
+  function walk(node) {
+    if (!node || typeof node !== 'object' || seen.has(node)) return;
+    seen.add(node);
+    if (Array.isArray(node)) { node.slice(0, 8).forEach(walk); return; }
+    for (const [k, v] of Object.entries(node)) {
+      if (typeof v === 'string') {
+        if (/^https?:\/\//.test(v) && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(v) && found.images.length < 6) found.images.push(v);
+        if (/^https?:\/\//.test(v) && /youtube-nocookie\.com\/embed\//.test(v) && found.embeds.length < 1) found.embeds.push(v);
+      } else if (typeof v === 'object') {
+        walk(v);
+      }
+    }
+  }
+  walk(data);
+
+  if (!found.images.length && !found.embeds.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'gen-smart-preview';
+  found.embeds.forEach(url => {
+    const f = document.createElement('iframe');
+    f.src = url; f.allowFullscreen = true; f.style.marginBottom = '10px';
+    wrap.appendChild(f);
+  });
+  if (found.images.length) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    found.images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src; img.loading = 'lazy';
+      img.onerror = () => img.style.display = 'none';
+      row.appendChild(img);
+    });
+    wrap.appendChild(row);
+  }
+  container.appendChild(wrap);
+}
+
+let lastGenResult = null;
+function copyGenResult() {
+  if (lastGenResult) navigator.clipboard.writeText(JSON.stringify(lastGenResult, null, 2));
+}
+
+
 document.getElementById('baseUrl').addEventListener('input', updateUrlPreview);
 document.getElementById('epInput').addEventListener('input', updateUrlPreview);
 document.getElementById('heavenIdInput').addEventListener('input', () => {

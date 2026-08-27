@@ -55,7 +55,7 @@ async function getCfClearance(baseURL: string): Promise<{ cookies: string; userA
 // reuse the cached cookies without calling FlareSolverr again.
 //
 // `useFlareSolverr` is opt-in (defaults to false). Only pass `true` for sites
-// that are actually behind Cloudflare's bot challenge (e.g. Senshi). Sites
+// that are actually behind Cloudflare's bot challenge. Sites
 // that don't need it (e.g. AnimeHeaven) should NOT set this — otherwise every
 // request pays the cost of a slow/cold FlareSolverr round trip for no reason.
 export function makeClient(baseURL: string, referer: string, useFlareSolverr: boolean = false, extra?: Record<string, string>): AxiosInstance {

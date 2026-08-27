@@ -5,7 +5,7 @@ import { cacheGet, cacheSet } from '../utils/cache';
 const BASE = 'https://animeheaven.me';
 // AnimeHeaven is NOT behind Cloudflare — no FlareSolverr needed, so we skip it
 // entirely (leaving useFlareSolverr at its default `false`). This avoids
-// paying for Senshi's slow FlareSolverr instance on every AnimeHeaven request.
+// paying for a slow FlareSolverr instance on every AnimeHeaven request.
 const http = makeClient(BASE, BASE + '/');
 
 export interface HeavenSearchResult {
@@ -52,6 +52,21 @@ function significantWords(s: string): string[] {
     .filter((w) => w.length >= 2);
 }
 
+// See anikoto.ts's copy of this same fix for the full rationale: a
+// candidate that only differs from the query by an OVA/special/movie/etc.
+// marker, OR by an unrequested season/part/cour marker, is a different
+// release, not the main entry, even though it scores well on prefix/ratio
+// alone.
+const TYPE_INDICATOR_WORDS = new Set([
+  'ova', 'ona', 'special', 'specials', 'movie', 'film', 'recap', 'picture', 'pv',
+  'season', 'part', 'cour', 'saga',
+]);
+
+function addsUnrequestedTypeIndicator(query: string, candidateTitle: string): boolean {
+  const queryWords = new Set(significantWords(query));
+  return significantWords(candidateTitle).some((w) => TYPE_INDICATOR_WORDS.has(w) && !queryWords.has(w));
+}
+
 function scoreTitle(query: string, title: string): number {
   const needle = normalizeTitle(query);
   const hay = normalizeTitle(title);
@@ -78,12 +93,20 @@ function scoreTitle(query: string, title: string): number {
     ? significantWords(query).length - significantWords(title).length
     : 0;
 
+  // Candidate is the longer string here -- if the extra text it adds over
+  // the query is an OVA/special/movie/etc. marker (e.g. query "Attack on
+  // Titan" vs candidate "Attack on Titan OVA"), it's a near-miss, not a
+  // match, same as the missingWords penalty below.
+  const candidateAddsSpinoffMarker = !queryIsLonger && addsUnrequestedTypeIndicator(query, title);
+
   if (hay.startsWith(needle) || needle.startsWith(hay)) {
     if (queryIsLonger && missingWords >= 2) return Math.floor(ratio * 30);
+    if (candidateAddsSpinoffMarker) return Math.floor(ratio * 30);
     return ratio >= 0.6 ? 80 : Math.floor(ratio * 60);
   }
   if (hay.includes(needle) || needle.includes(hay)) {
     if (queryIsLonger && missingWords >= 2) return Math.floor(ratio * 25);
+    if (candidateAddsSpinoffMarker) return Math.floor(ratio * 25);
     return ratio >= 0.6 ? 60 : Math.floor(ratio * 45);
   }
   let matches = 0;
