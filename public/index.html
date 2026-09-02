@@ -93,7 +93,8 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
 .str{color:#98c379} .kw{color:#c678dd} .num{color:#d19a66} .key{color:#61afef} .cmt{color:#5c6370;font-style:italic}
 
 /* sources grid */
-.sources-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.sources-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media (max-width:900px) { .sources-grid { grid-template-columns:1fr; } }
 .source-info-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; }
 .sic-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
 .sic-icon { font-size:28px; }
@@ -326,7 +327,7 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
     <p class="hero-desc">A unified REST API to fetch anime stream URLs and embed links across multiple sources, addressed by MAL or AniList ID. Railway-ready, zero config.</p>
     <div class="hero-pills">
       <span class="pill live">Online</span>
-      <span class="pill">2 Streaming Sources</span>
+      <span class="pill">3 Streaming Sources</span>
       <span class="pill">MAL Scraper</span>
       <span class="pill">TMDB · Kitsu · AniList</span>
       <span class="pill">Sub · Dub · Raw</span>
@@ -336,7 +337,7 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
   <!-- SOURCES -->
   <section class="section" id="sources">
     <div class="section-title">Supported Sources</div>
-    <div class="section-sub">Each source has its own scraper. CSS selectors may need updating after site changes.</div>
+    <div class="section-sub">Each source has its own scraper. CSS selectors and resolvers are kept in sync with upstream sites.</div>
     <div class="sources-grid">
       <div class="source-info-card">
         <div class="sic-header">
@@ -354,12 +355,24 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
         <div class="sic-header">
           <div class="sic-icon">🦊</div>
           <div><div class="sic-name">Anikoto</div><div class="sic-url">anikoto.net</div></div>
-          <span class="sic-tag verify">Verify selectors</span>
+          <span class="sic-tag works">Megacloud & HLS</span>
         </div>
         <div class="sic-row"><span class="sic-row-label">Key</span><span class="sic-row-val">anikoto</span></div>
         <div class="sic-row"><span class="sic-row-label">ID format</span><span class="sic-row-val">Title-search slug</span></div>
         <div class="sic-row"><span class="sic-row-label">Servers</span><span class="sic-row-val">Megacloud, Megaplay, Kiwi Mapper</span></div>
         <div class="sic-row"><span class="sic-row-label">Audio</span><span class="sic-row-val">Sub, Dub</span></div>
+      </div>
+
+      <div class="source-info-card">
+        <div class="sic-header">
+          <div class="sic-icon">🇮🇳</div>
+          <div><div class="sic-name">DesiDub</div><div class="sic-url">desidubanime.me</div></div>
+          <span class="sic-tag works">Multi-Audio & Dub</span>
+        </div>
+        <div class="sic-row"><span class="sic-row-label">Key</span><span class="sic-row-val">desidub</span></div>
+        <div class="sic-row"><span class="sic-row-label">ID format</span><span class="sic-row-val">Show slug / MAL ID</span></div>
+        <div class="sic-row"><span class="sic-row-label">Servers</span><span class="sic-row-val">Mirror, VidMoly, StreamRuby, Abyss</span></div>
+        <div class="sic-row"><span class="sic-row-label">Audio</span><span class="sic-row-val">Dub (Hindi/Muse/Official), Sub</span></div>
       </div>
     </div>
   </section>
@@ -374,12 +387,13 @@ pre { padding:20px; overflow-x:auto; font-family:var(--mono); font-size:12px; li
 <span class="cmt"># id = AniList ID  OR  mal-{malId}</span>
 
 GET /api/watch/<span class="str">anikoto</span>/<span class="num">20</span>/<span class="num">1</span>/<span class="str">sub</span>
-GET /api/watch/<span class="str">anikoto</span>/mal-<span class="num">21</span>/<span class="num">5</span>/<span class="str">dub</span>?server=Megacloud
+GET /api/watch/<span class="str">desidub</span>/mal-<span class="num">16498</span>/<span class="num">1</span>/<span class="str">dub</span>?server=VMoly
 GET /api/watch/<span class="str">animeheaven</span>/<span class="str">{heavenId}</span>/<span class="num">3</span>/<span class="str">sub</span></pre>
     </div>
     <div class="code-block">
       <div class="code-header">Query-based (compat) <button class="copy-btn" onclick="copyBlock(this)">Copy</button></div>
-      <pre>GET /api/watch?source=<span class="str">anikoto</span>&anilistId=<span class="num">20</span>&ep=<span class="num">1</span>&type=<span class="str">sub</span>
+      <pre>GET /api/watch?source=<span class="str">desidub</span>&malId=<span class="num">16498</span>&ep=<span class="num">1</span>&type=<span class="str">dub</span>
+GET /api/watch?source=<span class="str">anikoto</span>&anilistId=<span class="num">20</span>&ep=<span class="num">1</span>&type=<span class="str">sub</span>
 GET /api/watch?source=<span class="str">animeheaven</span>&heavenId=<span class="str">ukr6y</span>&ep=<span class="num">5</span>&type=<span class="str">sub</span></pre>
     </div>
   </section>
@@ -1188,7 +1202,7 @@ GET /api/watch?source=<span class="str">animeheaven</span>&heavenId=<span class=
 
         <!-- SOURCE -->
         <label class="field-label">Source</label>
-        <div class="source-grid" style="margin-bottom:20px;grid-template-columns:repeat(2,1fr);">
+        <div class="source-grid" style="margin-bottom:20px;grid-template-columns:repeat(3,1fr);">
           <div class="source-card active" onclick="setSource('anikoto',this)" id="src-anikoto">
             <div class="source-icon">🦊</div>
             <span class="source-name">Anikoto</span>
@@ -1198,6 +1212,11 @@ GET /api/watch?source=<span class="str">animeheaven</span>&heavenId=<span class=
             <div class="source-icon">🎭</div>
             <span class="source-name">AnimeHeaven</span>
             <span class="source-url">animeheaven.me</span>
+          </div>
+          <div class="source-card" onclick="setSource('desidub',this)" id="src-desidub">
+            <div class="source-icon">🇮🇳</div>
+            <span class="source-name">DesiDub</span>
+            <span class="source-url">desidubanime.me</span>
           </div>
         </div>
 
@@ -1657,12 +1676,39 @@ function renderEmbedPreview(data) {
   const hlsUrl = data.hlsProxyUrl || data.m3u8 || (embedUrl && embedUrl.includes('.m3u8') ? embedUrl : '');
 
   if (hlsUrl) {
+    if (window._currentHls) {
+      try { window._currentHls.destroy(); } catch(e) {}
+      window._currentHls = null;
+    }
     ep.innerHTML = `<video id="hlsPreview" controls playsinline crossorigin="anonymous"></video>`;
     const video = document.getElementById('hlsPreview');
     if (window.Hls && Hls.isSupported()) {
-      const hls = new Hls();
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        backBufferLength: 90,
+      });
+      window._currentHls = hls;
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+      hls.on(Hls.Events.ERROR, (event, errData) => {
+        if (errData && errData.fatal) {
+          switch (errData.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              try { hls.destroy(); } catch(e) {}
+              break;
+          }
+        }
+      });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = hlsUrl;
     } else {
@@ -1673,8 +1719,14 @@ function renderEmbedPreview(data) {
     return;
   }
 
+  if (window._currentHls) {
+    try { window._currentHls.destroy(); } catch(e) {}
+    window._currentHls = null;
+  }
+
   if (data.mp4 || data.playbackMode === 'mp4') {
-    ep.innerHTML = `<video controls playsinline crossorigin="anonymous" src="${escapeAttr(embedUrl)}"></video>`;
+    const videoSrc = data.mp4ProxyUrl || data.mp4 || embedUrl;
+    ep.innerHTML = `<video controls playsinline crossorigin="anonymous" src="${escapeAttr(videoSrc)}"></video>`;
     renderSubtitleBar(document.querySelector('#embedPreview video'), data.subtitles);
     return;
   }
