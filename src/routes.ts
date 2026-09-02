@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
+import https from 'https';
 import { malToAnilist, getSiteIds, getSiteIdsByMal, searchAnilist, SiteIds } from './utils/mapper';
 import { cacheStats } from './utils/cache';
 import { resolveEmbed } from './resolvers/megacloud';
 
 import { getHeavenEpisodes, getHeavenServers, getHeavenStream } from './scrapers/animeheaven';
 import { getAnikotoEpisodes, getAnikotoServers, getAnikotoEmbedUrl } from './scrapers/anikoto';
+import { getDesidubEpisodes, getDesidubServers, getDesidubStream } from './scrapers/desidub';
 import { getAnimeDetails, getEpisodes as getMalEpisodes, getEpisode as getMalEpisode, getAllEpisodes as getAllMalEpisodes, getCharacters, getCharacterDetails, getAnimePictures, getCharacterPictures, getAnimeThemes, getAnimeVideos, getRecommendations, searchAnime, getExternalLinks, getStreamingPlatforms, debugSearchHtml, MalEpisode } from './scrapers/mal';
 import { getSeasonNow, getTopBanners, getStreamingEpisodes, AniListStreamingEpisode, getAnimeImages as getAnilistAnimeImages } from './scrapers/anilist';
 import { getEpisodeThumbnail as getTmdbEpisodeThumbnail, getEpisodeData as getTmdbEpisodeData, getShowEpisodeCount as getTmdbEpisodeCount, getAnimeImages as getTmdbAnimeImages, extractSeasonHint } from './scrapers/tmdb';
@@ -13,7 +15,7 @@ import { getKitsuAnimeId, getEpisodeThumbnail as getKitsuEpisodeThumbnail, getEp
 
 const router = Router();
 
-const SOURCES = ['animeheaven', 'anikoto'] as const;
+const SOURCES = ['animeheaven', 'anikoto', 'desidub'] as const;
 type Source = typeof SOURCES[number];
 
 function publicBase(req: Request): string {
@@ -37,19 +39,47 @@ function proxiedSubtitleUrl(req: Request, url: string, ref?: string): string {
 
 function rewriteHlsPlaylist(req: Request, body: string, sourceUrl: string, ref?: string): string {
   const base = new URL(sourceUrl);
-  return body
-    .split(/\r?\n/)
+
+  // Rewrite a single URI value (relative or absolute) → proxy URL
+  const proxyUri = (uri: string) => proxiedHlsUrl(req, new URL(uri, base).toString(), ref);
+
+  let hasDefaultAudio = false;
+  const lines = body.split(/\r?\n/);
+
+  // Check if any audio track has DEFAULT=YES
+  for (const line of lines) {
+    if (line.includes('#EXT-X-MEDIA:TYPE=AUDIO') && line.includes('DEFAULT=YES')) {
+      hasDefaultAudio = true;
+      break;
+    }
+  }
+
+  let firstAudioMarked = false;
+
+  return lines
     .map((line) => {
       const trimmed = line.trim();
       if (!trimmed) return line;
-      if (trimmed.startsWith('#EXT-X-KEY') && trimmed.includes('URI=')) {
-        return line.replace(/URI="([^"]+)"/, (_m, uri) => {
-          const absolute = new URL(uri, base).toString();
-          return `URI="${proxiedHlsUrl(req, absolute, ref)}"`;
-        });
+
+      // If this is an audio track and no audio has DEFAULT=YES, promote the first one to DEFAULT=YES,AUTOSELECT=YES
+      let processedLine = line;
+      if (!hasDefaultAudio && !firstAudioMarked && trimmed.includes('#EXT-X-MEDIA:TYPE=AUDIO')) {
+        processedLine = processedLine
+          .replace(/DEFAULT=NO/g, 'DEFAULT=YES')
+          .replace(/AUTOSELECT=NO/g, 'AUTOSELECT=YES');
+        firstAudioMarked = true;
       }
-      if (trimmed.startsWith('#')) return line;
-      return proxiedHlsUrl(req, new URL(trimmed, base).toString(), ref);
+
+      // Rewrite all URI="..." attributes inside any HLS directive line
+      // Covers: #EXT-X-KEY, #EXT-X-MEDIA, #EXT-X-MAP, #EXT-X-I-FRAME-STREAM-INF, etc.
+      if (processedLine.trim().startsWith('#') && processedLine.includes('URI=')) {
+        return processedLine.replace(/URI="([^"]+)"/g, (_m, uri) => `URI="${proxyUri(uri)}"`);
+      }
+
+      if (processedLine.trim().startsWith('#')) return processedLine;
+
+      // Non-# lines are segment/variant URLs — proxy them directly
+      return proxyUri(trimmed);
     })
     .join('\n');
 }
@@ -86,6 +116,11 @@ async function fetchEpisodes(source: Source, siteIds: any, overrides: { heavenId
     const slug = siteIds.siteIds?.anikoto as string | undefined;
     if (!slug) return { episodes: [], siteId: '', error: 'Not indexed on Anikoto' };
     return { episodes: await getAnikotoEpisodes(slug), siteId: slug };
+  }
+  if (source === 'desidub') {
+    const slug = siteIds.siteIds?.desidub as string | undefined;
+    if (!slug) return { episodes: [], siteId: '', error: 'Not indexed on DesiDub' };
+    return { episodes: await getDesidubEpisodes(slug), siteId: slug };
   }
   return { episodes: [], siteId: '', error: 'Unknown source' };
 }
@@ -141,7 +176,7 @@ router.get('/info', async (req: Request, res: Response) => {
   }
 });
 
-// Streaming-source episode list (animeheaven/anikoto episode
+// Streaming-source episode list (animeheaven/anikoto/desidub episode
 // IDs, used by /servers and /watch to locate a playable episode). Not to be
 // confused with the singular /episode route further down, which is the
 // MAL-metadata + thumbnail combined lookup.
@@ -187,6 +222,7 @@ router.get('/servers', async (req: Request, res: Response) => {
     let allServers: any[] = [];
     if (source === 'animeheaven') allServers = await getHeavenServers(episode.id);
     if (source === 'anikoto') allServers = await getAnikotoServers(episode.id);
+    if (source === 'desidub') allServers = await getDesidubServers(episode.id);
 
     const filtered = type === 'all' ? allServers : allServers.filter((s: any) => s.type === type);
     return res.json({
@@ -233,8 +269,11 @@ async function watchHandler(req: Request, res: Response) {
     let allServers: any[] = [];
     if (source === 'animeheaven') allServers = await getHeavenServers(episode.id);
     if (source === 'anikoto') allServers = await getAnikotoServers(episode.id);
+    if (source === 'desidub') allServers = await getDesidubServers(episode.id);
 
-    const filtered = allServers.filter((s: any) => s.type === type);
+    const filtered = type === 'all'
+      ? allServers
+      : allServers.filter((s: any) => s.type === type);
     if (!filtered.length) return res.status(404).json({ error: `No ${type} stream available on ${source} for ep ${epNum}` });
 
     // `strict=1` alongside `server=` restricts to ONLY that server (no
@@ -262,6 +301,7 @@ async function watchHandler(req: Request, res: Response) {
       let raw: any = null;
       if (source === 'animeheaven') raw = await getHeavenStream(server.sourceId);
       if (source === 'anikoto') raw = await getAnikotoEmbedUrl(server.sourceId);
+      if (source === 'desidub') raw = await getDesidubStream(server.sourceId);
       if (raw) { embedResult = raw; usedServer = server.name; break; }
     }
     if (!embedResult) {
@@ -323,6 +363,35 @@ async function watchHandler(req: Request, res: Response) {
       });
     }
 
+    if (source === 'desidub') {
+      const isHls = Boolean(embedResult.m3u8);
+      const isMp4 = Boolean(embedResult.mp4);
+      return res.json({
+        anilistId: siteIds.anilistId,
+        malId: siteIds.malId,
+        title: siteIds.title,
+        episode: epNum,
+        type,
+        source,
+        server: usedServer,
+        availableServers: filtered.map((s: any) => s.name),
+        embedUrl: embedResult.embedUrl,
+        m3u8: embedResult.m3u8 ?? null,
+        hlsProxyUrl: isHls ? proxiedHlsUrl(req, embedResult.m3u8, embedResult.referer) : null,
+        mp4: embedResult.mp4 ?? null,
+        mp4ProxyUrl: isMp4 ? proxiedVideoUrl(req, embedResult.mp4) : null,
+        playbackMode: isHls ? 'hls' : isMp4 ? 'mp4' : 'iframe',
+        iframeOnly: !isHls && !isMp4,
+        subtitles: (embedResult.subtitles ?? []).map((s: any) => ({
+          ...s,
+          url: proxiedSubtitleUrl(req, s.url, embedResult.referer),
+        })),
+        intro: null,
+        outro: null,
+        note: isHls || isMp4 ? null : 'No direct stream extracted — use embedUrl in an iframe.',
+      });
+    }
+
     const directM3u8 = typeof embedResult.embedUrl === 'string' && embedResult.embedUrl.includes('.m3u8');
     const stream = directM3u8 ? null : await resolveEmbed(embedResult.embedUrl);
     const hasHls = Boolean(directM3u8 || stream?.m3u8);
@@ -377,19 +446,29 @@ router.get('/proxy/hls', async (req: Request, res: Response) => {
     const upstream = await axios.get(url, {
       responseType: 'arraybuffer',
       timeout: 15000,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
         'Accept': '*/*',
         'Accept-Language': 'en-US,en;q=0.9',
         ...(referer ? { Referer: referer } : {}),
         ...(origin ? { Origin: origin } : {}),
+        ...(req.headers.range ? { Range: req.headers.range } : {}),
       },
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 206,
     });
 
     const contentType = String(upstream.headers['content-type'] ?? '');
     const body = Buffer.from(upstream.data);
+
+    res.status(upstream.status);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'public, max-age=30');
+
+    for (const h of ['accept-ranges', 'content-range', 'content-length', 'etag', 'last-modified']) {
+      const val = upstream.headers[h];
+      if (val) res.setHeader(h, val);
+    }
 
     if (url.includes('.m3u8') || contentType.includes('mpegurl')) {
       const text = body.toString('utf8');
@@ -400,7 +479,15 @@ router.get('/proxy/hls', async (req: Request, res: Response) => {
       return res.send(rewriteHlsPlaylist(req, text, url, ref));
     }
 
-    res.type(contentType || 'application/octet-stream');
+    // Set correct video MIME types for segments so HLS.js demuxer can process them reliably
+    if (url.includes('.ts') || contentType.includes('mp2t')) {
+      res.type('video/mp2t');
+    } else if (url.includes('.m4s') || url.includes('.mp4') || url.includes('.woff') || contentType.includes('mp4')) {
+      res.type('video/mp4');
+    } else {
+      res.type(contentType || 'application/octet-stream');
+    }
+
     return res.send(body);
   } catch (e: any) {
     return res.status(e?.response?.status || 502).json({ error: 'HLS proxy failed', detail: e?.message || String(e) });
