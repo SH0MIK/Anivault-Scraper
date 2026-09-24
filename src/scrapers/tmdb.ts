@@ -130,25 +130,31 @@ async function searchShow(animeTitle: string, log: string[]): Promise<{ id: numb
     return null;
   }
 
-  // Prefer a result that's actually animated AND Japanese-origin -- catches
-  // cases like "One Piece" where a live-action adaptation of the same name
-  // (different genre, different origin_country) outranks the anime in
-  // TMDB's default search order. Falls back through progressively looser
-  // criteria, then finally to whatever TMDB ranked first, so this never
-  // returns nothing just because a match couldn't be scored.
+  // Anime art must resolve to an actually animated TMDB result. A title can
+  // have an unrelated Japanese live-action TV drama with the exact same name
+  // (for example "Kimi no na wa"/"Your Name."). The old fallback to any
+  // Japanese result could therefore return live-action key art for an anime.
+  // If TMDB has no animated match, return null and let the caller continue to
+  // Kitsu/AniList instead of knowingly returning the wrong medium.
   const isAnimated = (r: any) => Array.isArray(r.genre_ids) && r.genre_ids.includes(ANIMATION_GENRE_ID);
   const isJapanese = (r: any) => r.original_language === 'ja' || (Array.isArray(r.origin_country) && r.origin_country.includes('JP'));
 
   const show =
     results.find((r: any) => isAnimated(r) && isJapanese(r)) ||
-    results.find((r: any) => isAnimated(r)) ||
-    results.find((r: any) => isJapanese(r)) ||
-    results[0];
+    results.find((r: any) => isAnimated(r));
+
+  if (!show) {
+    const ranked = results[0];
+    log.push(
+      `TMDB: search for '${animeTitle}' returned '${ranked?.name ?? 'results'}' but no animated match — refusing non-anime art`
+    );
+    return null;
+  }
 
   if (show !== results[0]) {
-    log.push(`TMDB: '${results[0].name}' (ID ${results[0].id}) ranked first but isn't anime -- picked '${show.name}' (ID ${show.id}) instead`);
+    log.push(`TMDB: '${results[0].name}' (ID ${results[0].id}) ranked first but isn't the anime -- picked '${show.name}' (ID ${show.id}) instead`);
   }
-  log.push(`TMDB: matched '${animeTitle}' -> '${show.name}' (ID ${show.id})`);
+  log.push(`TMDB: matched anime '${animeTitle}' -> '${show.name}' (ID ${show.id})`);
   return { id: show.id, name: show.name };
 }
 
@@ -175,7 +181,7 @@ export async function getAnimeImages(
     return { result: null, log };
   }
 
-  const cacheKey = `tmdb:images:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}`;
+  const cacheKey = `tmdb:images:v2:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}`;
   if (!isList) {
     const cached = cacheGet<TmdbAnimeImages | null>(cacheKey);
     if (cached !== null) {
