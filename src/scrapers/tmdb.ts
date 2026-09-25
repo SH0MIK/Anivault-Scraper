@@ -484,7 +484,7 @@ export async function getEpisodeThumbnail(
     return { result: null, log };
   }
 
-  const cacheKey = `tmdb:epthumb:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}:${epNum}`;
+  const cacheKey = `tmdb:epthumb:v2:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}:${epNum}`;
   if (!isList) {
     const cached = cacheGet<TmdbEpisodeThumb | null>(cacheKey);
     if (cached !== null) {
@@ -720,7 +720,7 @@ export async function getEpisodeData(
     return { result: null, log };
   }
 
-  const cacheKey = `tmdb:epdata:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}:${epNum}`;
+  const cacheKey = `tmdb:epdata:v2:${animeTitle.toLowerCase()}:s${seasonHint ?? ''}:${epNum}`;
   if (!isList) {
     const cached = cacheGet<TmdbEpisodeData | null>(cacheKey);
     if (cached !== null) {
