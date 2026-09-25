@@ -158,6 +158,40 @@ async function searchShow(animeTitle: string, log: string[]): Promise<{ id: numb
   return { id: show.id, name: show.name };
 }
 
+
+async function searchMovie(animeTitle: string, log: string[]): Promise<{ id: number; name: string } | null> {
+  const srch = await tmdbClient.get('/search/movie', {
+    params: { api_key: TMDB_API_KEY, query: animeTitle, language: 'en-US' },
+  });
+  const results = srch.data?.results ?? [];
+  if (results.length === 0) {
+    log.push(`TMDB movie: no result found for '${animeTitle}'`);
+    return null;
+  }
+
+  // Anime films are TMDB "movie" entries, not TV entries. Never accept a
+  // same-title live-action movie as an anime-art match.
+  const isAnimated = (r: any) => Array.isArray(r.genre_ids) && r.genre_ids.includes(ANIMATION_GENRE_ID);
+  const isJapanese = (r: any) => r.original_language === 'ja' || (Array.isArray(r.origin_country) && r.origin_country.includes('JP'));
+
+  const movie =
+    results.find((r: any) => isAnimated(r) && isJapanese(r)) ||
+    results.find((r: any) => isAnimated(r));
+
+  if (!movie) {
+    const ranked = results[0];
+    log.push(
+      `TMDB movie: search for '${animeTitle}' returned '${ranked?.title ?? 'results'}' but no animated match — refusing non-anime art`
+    );
+    return null;
+  }
+
+  if (movie !== results[0]) {
+    log.push(`TMDB movie: '${results[0].title}' (ID ${results[0].id}) ranked first but isn't the anime -- picked '${movie.title}' (ID ${movie.id}) instead`);
+  }
+  log.push(`TMDB: matched anime movie '${animeTitle}' -> '${movie.title}' (ID ${movie.id})`);
+  return { id: movie.id, name: movie.title };
+}
 /**
  * Poster (cover), backdrop (banner), and logo for a show, by title.
  *
@@ -192,10 +226,52 @@ export async function getAnimeImages(
 
   try {
     const show = await searchShow(animeTitle, log);
+
+    // TMDB stores anime films under /movie, not /tv. This is important for
+    // titles such as "Your Name.": searching TV can find an unrelated
+    // live-action drama with the same title. If no animated TV result exists,
+    // search TMDB movies and only accept an animated match.
     if (!show) {
-      cacheSet(cacheKey, null, 'mapping');
-      return { result: null, log };
+      const movie = await searchMovie(animeTitle, log);
+      if (!movie) {
+        cacheSet(cacheKey, null, 'mapping');
+        return { result: null, log };
+      }
+
+      const imgRes = await tmdbClient.get(`/movie/${movie.id}/images`, {
+        params: { api_key: TMDB_API_KEY, include_image_language: 'en,ja,null' },
+      });
+      const posters: any[] = imgRes.data?.posters ?? [];
+      const backdrops: any[] = imgRes.data?.backdrops ?? [];
+      const logos: any[] = imgRes.data?.logos ?? [];
+      log.push(`TMDB movie images: ${posters.length} posters, ${backdrops.length} backdrops, ${logos.length} logos`);
+
+      const poster = pickBestImage(posters, 'lang-first');
+      const backdrop = pickBestImage(backdrops, 'textless-first');
+      const logo = pickBestImage(logos, 'lang-first');
+
+      if (!poster && !backdrop && !logo) {
+        log.push('TMDB movie: no usable images found');
+        cacheSet(cacheKey, null, 'mapping');
+        return { result: null, log };
+      }
+
+      const result: TmdbAnimeImages = {
+        showId: movie.id,
+        showName: movie.name,
+        season: null,
+        poster: poster ? `https://image.tmdb.org/t/p/w500${poster.file_path}` : null,
+        posterOriginal: poster ? `https://image.tmdb.org/t/p/original${poster.file_path}` : null,
+        backdrop: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop.file_path}` : null,
+        backdropOriginal: backdrop ? `https://image.tmdb.org/t/p/original${backdrop.file_path}` : null,
+        logo: logo ? `https://image.tmdb.org/t/p/w500${logo.file_path}` : null,
+        logoOriginal: logo ? `https://image.tmdb.org/t/p/original${logo.file_path}` : null,
+      };
+
+      cacheSet(cacheKey, result, 'mapping');
+      return { result, log };
     }
+
     const showId = show.id;
 
     const imgRes = await tmdbClient.get(`/tv/${showId}/images`, {
