@@ -8,6 +8,43 @@ const BASE = 'https://animeheaven.me';
 // paying for a slow FlareSolverr instance on every AnimeHeaven request.
 const http = makeClient(BASE, BASE + '/');
 
+// AnimeHeaven's gate endpoint can be session-bound. Axios does not persist
+// Set-Cookie headers by itself, so keep the site's first-party cookies and
+// send them back when requesting gate.php. The episode key cookie is added
+// separately per stream request.
+let heavenCookies = '';
+
+function captureHeavenCookies(response: any): void {
+  const setCookie = response?.headers?.['set-cookie'];
+  if (!Array.isArray(setCookie)) return;
+
+  const jar = new Map<string, string>();
+  for (const cookie of heavenCookies.split(';')) {
+    const [name, ...rest] = cookie.trim().split('=');
+    if (name && rest.length) jar.set(name, rest.join('='));
+  }
+  for (const raw of setCookie) {
+    const pair = String(raw).split(';', 1)[0]?.trim();
+    if (!pair) continue;
+    const [name, ...rest] = pair.split('=');
+    if (name && rest.length) jar.set(name.trim(), rest.join('='));
+  }
+  heavenCookies = Array.from(jar.entries()).map(([name, value]) => `${name}=${value}`).join('; ');
+}
+
+function heavenCookieHeader(key?: string): string {
+  const jar = new Map<string, string>();
+  for (const cookie of heavenCookies.split(';')) {
+    const value = cookie.trim();
+    if (!value) continue;
+    const index = value.indexOf('=');
+    if (index <= 0) continue;
+    jar.set(value.slice(0, index), value.slice(index + 1));
+  }
+  if (key) jar.set('key', key);
+  return Array.from(jar.entries()).map(([name, value]) => `${name}=${value}`).join('; ');
+}
+
 export interface HeavenSearchResult {
   id: string;
   title: string;
@@ -116,13 +153,25 @@ function scoreTitle(query: string, title: string): number {
 
 export async function searchAnimeHeaven(query: string): Promise<HeavenSearchResult[]> {
   const cacheKey = `heaven:search:${query.toLowerCase().trim()}`;
+  console.error(`[AnimeHeaven] search start: ${query}`);
   const cached = cacheGet<HeavenSearchResult[]>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.error(`[AnimeHeaven] search cache hit: ${cached.length} result(s)`);
+    return cached;
+  }
 
-  const res = await http.get('/fastsearch.php', {
+  let res: any;
+  try {
+    res = await http.get('/fastsearch.php', {
     params: { xhr: 1, s: query },
     headers: { Accept: 'text/html,*/*' },
   });
+  } catch (error: any) {
+    console.error(`[AnimeHeaven] search request failed: ${error?.response?.status ?? error?.message ?? error}`);
+    throw error;
+  }
+  console.error(`[AnimeHeaven] search status: ${res.status} url=${res.request?.res?.responseUrl ?? 'unknown'}`);
+  captureHeavenCookies(res);
   const $ = cheerio.load(res.data);
 
   const results: HeavenSearchResult[] = [];
@@ -139,11 +188,13 @@ export async function searchAnimeHeaven(query: string): Promise<HeavenSearchResu
     });
   });
 
+  console.error(`[AnimeHeaven] search matched: ${results.length} result(s)`);
   cacheSet(cacheKey, results, 'episodes');
   return results;
 }
 
 export async function findAnimeHeavenId(title: string): Promise<string | null> {
+  console.error(`[AnimeHeaven] find ID: ${title}`);
   const noPossessive = title.replace(/[’']s\b/gi, '');
   const variants = Array.from(new Set([
     title,
@@ -161,13 +212,19 @@ export async function findAnimeHeavenId(title: string): Promise<string | null> {
 
   const allResults: HeavenSearchResult[] = [];
   for (const variant of variants) {
-    const results = await searchAnimeHeaven(variant).catch(() => []);
+    const results = await searchAnimeHeaven(variant).catch((error: any) => {
+      console.error(`[AnimeHeaven] variant failed: ${variant} -> ${error?.response?.status ?? error?.message ?? error}`);
+      return [];
+    });
     allResults.push(...results);
     if (results.some((result) => scoreTitle(title, result.title) >= 80)) break;
   }
 
   const unique = Array.from(new Map(allResults.map((result) => [result.id, result])).values());
-  if (!unique.length) return null;
+  if (!unique.length) {
+    console.error(`[AnimeHeaven] no search matches for: ${title}`);
+    return null;
+  }
 
   const best = unique
     .map((result) => ({ result, score: scoreTitle(title, result.title) }))
@@ -181,31 +238,70 @@ export async function findAnimeHeavenId(title: string): Promise<string | null> {
   // matches on AnimeHeaven should never score below this. The false
   // matches from the bug report score ~20-35, well under this bar.
   const MIN_ACCEPT_SCORE = 60;
-  if (best.score < MIN_ACCEPT_SCORE) return null;
+  if (best.score < MIN_ACCEPT_SCORE) {
+    console.error(`[AnimeHeaven] best match rejected: ${best.result.title} score=${best.score}`);
+    return null;
+  }
 
+  console.error(`[AnimeHeaven] matched: ${best.result.title} id=${best.result.id} score=${best.score}`);
   return best.result.id;
 }
 
 export async function getHeavenEpisodes(animeId: string): Promise<HeavenEpisode[]> {
+  console.error(`[AnimeHeaven] anime page start: ${animeId}`);
   const cacheKey = `heaven:eps:${animeId}`;
   const cached = cacheGet<HeavenEpisode[]>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.error(`[AnimeHeaven] episodes cache hit: ${cached.length} episode(s)`);
+    return cached;
+  }
 
-  const res = await http.get(`/anime.php?${animeId}`);
+  let res: any;
+  try {
+    res = await http.get(`/anime.php?${animeId}`);
+  } catch (error: any) {
+    console.error(`[AnimeHeaven] anime page failed: ${error?.response?.status ?? error?.message ?? error}`);
+    throw error;
+  }
+  console.error(`[AnimeHeaven] anime page status: ${res.status} url=${res.request?.res?.responseUrl ?? 'unknown'}`);
+  captureHeavenCookies(res);
   const $ = cheerio.load(res.data);
   const episodes: HeavenEpisode[] = [];
 
-  $('a[onmouseover*="gateh("], a[onclick*="gatea("]').each((_, el) => {
-    const attr = $(el).attr('onmouseover') || $(el).attr('onclick') || '';
-    const key = attr.match(/gate[ha]\("([^"]+)"/)?.[1];
-    const rawNum = $(el).find('.watch2').first().text().trim();
+  // The site has changed its episode-link markup/quoting over time.
+  // Inspect episode-looking anchors broadly and accept both quote styles.
+  $('a').each((_, el) => {
+    const onmouseover = $(el).attr('onmouseover') || '';
+    const onclick = $(el).attr('onclick') || '';
+    const href = $(el).attr('href') || '';
+    const text = $(el).text().replace(/\s+/g, ' ').trim();
+    const attrs = [onmouseover, onclick, href].join(' ');
+    if (!/(?:gate[ha]\s*\(|gate\.php|episode)/i.test(attrs + ' ' + text)) return;
+
+    const key =
+      attrs.match(/gate[ha]\s*\(\s*["']([^"']+)["']/i)?.[1] ||
+      attrs.match(/gate[ha]\s*\(\s*([^,)\s]+)/i)?.[1] ||
+      href.match(/[?&](?:key|id)=([^&#]+)/i)?.[1];
+
+    const rawNum =
+      $(el).find('.watch2').first().text().trim() ||
+      text.match(/episode\s*([0-9]+(?:\.[0-9]+)?)/i)?.[1] ||
+      text.match(/^([0-9]+(?:\.[0-9]+)?)$/)?.[1] ||
+      '';
+
     const num = Number(rawNum.replace(/^0+(\d)/, '$1'));
     if (!key || !Number.isFinite(num)) return;
-    episodes.push({ id: key, num, title: `Episode ${rawNum}` });
+
+    episodes.push({
+      id: decodeURIComponent(key),
+      num,
+      title: `Episode ${rawNum}`,
+    });
   });
 
   const unique = Array.from(new Map(episodes.map((ep) => [ep.id, ep])).values())
     .sort((a, b) => a.num - b.num);
+  console.error(`[AnimeHeaven] episodes found: ${unique.length}`);
   cacheSet(cacheKey, unique, 'episodes');
   return unique;
 }
@@ -217,17 +313,28 @@ export async function getHeavenServers(episodeId: string): Promise<HeavenServer[
 }
 
 export async function getHeavenStream(episodeId: string): Promise<HeavenStream | null> {
+  console.error(`[AnimeHeaven] gate start: key length=${episodeId.length}`);
   const cacheKey = `heaven:stream:${episodeId}`;
   const cached = cacheGet<HeavenStream>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.error('[AnimeHeaven] gate cache hit');
+    return cached;
+  }
 
-  const res = await http.get('/gate.php', {
+  let res: any;
+  try {
+    res = await http.get('/gate.php', {
     headers: {
-      Cookie: `key=${episodeId}`,
+      Cookie: heavenCookieHeader(episodeId),
       Referer: `${BASE}/`,
       Accept: 'text/html,*/*',
     },
   });
+  } catch (error: any) {
+    console.error(`[AnimeHeaven] gate request failed: ${error?.response?.status ?? error?.message ?? error}`);
+    throw error;
+  }
+  console.error(`[AnimeHeaven] gate status: ${res.status} url=${res.request?.res?.responseUrl ?? 'unknown'} body=${String(res.data ?? '').slice(0, 300).replace(/\s+/g, ' ')}`);
   const $ = cheerio.load(res.data);
   const sources = $('video source')
     .map((_, el) => $(el).attr('src')?.trim() || '')
@@ -235,7 +342,11 @@ export async function getHeavenStream(episodeId: string): Promise<HeavenStream |
     .filter((url) => /^https?:\/\//i.test(url));
 
   const primary = sources.find((url) => url.includes('/video.mp4')) || sources[0];
-  if (!primary) return null;
+  console.error(`[AnimeHeaven] gate sources found: ${sources.length}`);
+  if (!primary) {
+    console.error('[AnimeHeaven] gate returned no playable video source');
+    return null;
+  }
 
   const stream: HeavenStream = {
     embedUrl: `${BASE}/gate.php`,
