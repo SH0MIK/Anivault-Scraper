@@ -4,6 +4,10 @@
 
 **The video-sourcing and metadata backend for [AniVault](https://www.anivault.co).**
 
+![Views](https://visitor-badge.laobi.icu/badge?page_id=SH0MIK.Anivault-Scraper)
+[![Discord](https://img.shields.io/badge/Join%20Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/QK2dAVgK2a)
+[![GitHub stars](https://img.shields.io/github/stars/SH0MIK/Anivault-Scraper?style=flat-square&color=yellow)](https://github.com/SH0MIK/Anivault-Scraper/stargazers)
+
 Resolves anime titles → episodes → live, playable streams (sub & dub), and
 scrapes MyAnimeList directly for everything Jikan used to provide — details,
 episodes, characters, pictures, theme songs, trailers, and recommendations —
