@@ -220,7 +220,7 @@ router.get('/servers', async (req: Request, res: Response) => {
     if (!episode) return res.status(404).json({ error: `Episode ${epNum} not found` });
 
     let allServers: any[] = [];
-    if (source === 'animeheaven') allServers = await getHeavenServers(episode.id);
+    if (source === 'animeheaven') allServers = await getHeavenServers(episode.id, `https://animeheaven.me/anime.php?${epResult.siteId}`);
     if (source === 'anikoto') allServers = await getAnikotoServers(episode.id);
     if (source === 'desidub') allServers = await getDesidubServers(episode.id);
 
@@ -299,7 +299,7 @@ async function watchHandler(req: Request, res: Response) {
     let usedServer = '';
     for (const server of candidates) {
       let raw: any = null;
-      if (source === 'animeheaven') raw = await getHeavenStream(server.sourceId);
+      if (source === 'animeheaven') raw = await getHeavenStream(server.sourceId, server.referer);
       if (source === 'anikoto') raw = await getAnikotoEmbedUrl(server.sourceId);
       if (source === 'desidub') raw = await getDesidubStream(server.sourceId);
       if (raw) { embedResult = raw; usedServer = server.name; break; }
@@ -321,10 +321,10 @@ async function watchHandler(req: Request, res: Response) {
         server: usedServer,
         availableServers: filtered.map((s: any) => s.name),
         embedUrl: embedResult.embedUrl,
-        streamUrl: proxiedVideoUrl(req, embedResult.streamUrl),
+        streamUrl: proxiedVideoUrl(req, embedResult.streamUrl, embedResult.referer),
         rawStreamUrl: embedResult.streamUrl,
         mp4: embedResult.mp4,
-        mp4ProxyUrl: proxiedVideoUrl(req, embedResult.mp4),
+        mp4ProxyUrl: proxiedVideoUrl(req, embedResult.mp4, embedResult.referer),
         m3u8: null,
         hlsProxyUrl: null,
         playbackMode: 'mp4',
