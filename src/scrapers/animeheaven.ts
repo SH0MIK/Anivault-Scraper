@@ -62,11 +62,13 @@ export interface HeavenServer {
   name: string;
   sourceId: string;
   type: 'sub';
+  referer: string;
 }
 
 export interface HeavenStream {
   embedUrl: string;
   streamUrl: string;
+  referer: string;
   mp4: string;
   m3u8: null;
   type: 'mp4';
@@ -306,13 +308,19 @@ export async function getHeavenEpisodes(animeId: string): Promise<HeavenEpisode[
   return unique;
 }
 
-export async function getHeavenServers(episodeId: string): Promise<HeavenServer[]> {
+export async function getHeavenServers(
+  episodeId: string,
+  referer: string = BASE + '/',
+): Promise<HeavenServer[]> {
   return [
-    { name: 'AnimeHeaven', sourceId: episodeId, type: 'sub' },
+    { name: 'AnimeHeaven', sourceId: episodeId, type: 'sub', referer },
   ];
 }
 
-export async function getHeavenStream(episodeId: string): Promise<HeavenStream | null> {
+export async function getHeavenStream(
+  episodeId: string,
+  referer: string = BASE + '/',
+): Promise<HeavenStream | null> {
   console.error(`[AnimeHeaven] gate start: key length=${episodeId.length}`);
   const cacheKey = `heaven:stream:${episodeId}`;
   const cached = cacheGet<HeavenStream>(cacheKey);
@@ -326,8 +334,13 @@ export async function getHeavenStream(episodeId: string): Promise<HeavenStream |
     res = await http.get('/gate.php', {
     headers: {
       Cookie: heavenCookieHeader(episodeId),
-      Referer: `${BASE}/`,
-      Accept: 'text/html,*/*',
+      Referer: referer,
+      Origin: BASE,
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Cache-Control': 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'same-origin',
     },
   });
   } catch (error: any) {
@@ -335,13 +348,28 @@ export async function getHeavenStream(episodeId: string): Promise<HeavenStream |
     throw error;
   }
   console.error(`[AnimeHeaven] gate status: ${res.status} url=${res.request?.res?.responseUrl ?? 'unknown'} body=${String(res.data ?? '').slice(0, 300).replace(/\s+/g, ' ')}`);
-  const $ = cheerio.load(res.data);
+  const html = String(res.data ?? '');
+  const $ = cheerio.load(html);
+
+  // gate.php can return AnimeHeaven's short gate/placeholder player instead
+  // of the requested episode. Never cache or expose that page as if it were
+  // a real episode stream.
+  const gatePlaceholder = /watch\s+episode\s+on\s+animeheaven\.me/i.test(
+    $.root().text().replace(/\s+/g, ' '),
+  );
+  if (gatePlaceholder) {
+    console.error('[AnimeHeaven] gate returned the placeholder player; rejecting it');
+    return null;
+  }
+
   const sources = $('video source')
     .map((_, el) => $(el).attr('src')?.trim() || '')
     .get()
     .filter((url) => /^https?:\/\//i.test(url));
 
-  const primary = sources.find((url) => url.includes('/video.mp4')) || sources[0];
+  // Prefer an explicit MP4 source, but only after the gate response has
+  // passed the placeholder check above.
+  const primary = sources.find((url) => /\.mp4(?:$|\?)/i.test(url)) || sources[0];
   console.error(`[AnimeHeaven] gate sources found: ${sources.length}`);
   if (!primary) {
     console.error('[AnimeHeaven] gate returned no playable video source');
@@ -351,6 +379,7 @@ export async function getHeavenStream(episodeId: string): Promise<HeavenStream |
   const stream: HeavenStream = {
     embedUrl: `${BASE}/gate.php`,
     streamUrl: primary,
+    referer,
     mp4: primary,
     m3u8: null,
     type: 'mp4',
