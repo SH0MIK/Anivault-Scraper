@@ -1,7 +1,7 @@
 {
   "name": "anivault-api",
   "version": "1.0.0",
-  "description": "Anime streaming scraper API \u2014 AniVault backend",
+  "description": "Anime streaming scraper API — AniVault backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
@@ -10,9 +10,7 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "archiver": "^7.0.1",
     "axios": "^1.6.7",
-    "basic-ftp": "^5.0.5",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
@@ -21,7 +19,6 @@
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.2",
     "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.17",
     "@types/crypto-js": "^4.2.2",
